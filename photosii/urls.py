@@ -10,6 +10,7 @@ urlpatterns = [
     path('account/', include('account.urls')),
     path('', homepage, name='homepage'),
     path('photo_add', photo_add, name='photo_add'),
+    path('<int:id>/delete', photo_delete, name='photo_delete'),
     path('<int:id>/', photo_view, name='photo_view'),
     path('api/<int:user_id>/photos/', PhotoListView.as_view()),
     path('api/<int:user_id>/photos/<int:pk>/', PhotoView.as_view()),

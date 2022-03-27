@@ -1,7 +1,7 @@
 {% load i18n %}
 
 <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #a04de5">
-  <div class="container-fluid">
+  <div class="container container-fluid">
     <a class="navbar-brand" href="{% url 'photosii:homepage' %}">GalleryAI</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -40,12 +40,6 @@
           {% endif %}
 
       </ul>
-      {% if search_input %}
-      <form class="d-flex" action="">
-        <input id="search_input" name="search" class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-        <button class="btn" type="submit" style="background-color:#00f5b2">Search</button>
-      </form>
-      {% endif %}
     </div>
   </div>
 </nav>

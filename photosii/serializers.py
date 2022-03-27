@@ -29,6 +29,14 @@ class PhotoListSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class PhotoJobSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField(read_only=True)
+
+    class Meta:
+        model = Photo
+        fields = ('image', 'status', 'user')
+
+
 class PhotoSerializer(serializers.ModelSerializer):
     tag = serializers.SlugRelatedField(slug_field='name', read_only=True)
 

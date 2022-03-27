@@ -4,16 +4,20 @@
 
     {% include "navbar.html" %}
 
-    <div class="container" style="padding: 30px 0;">
-        {% for tag, photos in data.items %}
-             <h2>{{ tag |title }}</h2>
-                 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3" style="padding: 30px 0;">
-                    {% for photo in photos.all %}
-                        <div class="col">
-                            {% include "photo_card.html" %}
-                        </div>
-                    {% endfor %}
-                 </div>
-         {% endfor %}
+    <div class="container">
+        <div class="row">
+            {% for tag, data in data.items %}
+                <div class="col-6">
+                    <h2 class="jumbotron-heading text-center mx-auto my-5" style="color:{{ data.color }}">{{ tag |title }}</h2>
+                    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+                        {% for photo in data.photos.all %}
+                            <div class="col">
+                                {% include "photo_card.html" %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
     </div>
 {% endblock %}

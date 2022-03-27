@@ -15,13 +15,12 @@ import json
 
 
 def homepage(request):
-    search_query = request.GET.get('search', '').lower()
     if request.user.is_authenticated:
         user = request.user
-        data = {"Match": user.photos.filter(status='n'),
-                "Doesn't match": user.photos.filter(status='b')}
-        print(data)
-        print(data)
+        match = user.photos.filter(status='n')
+        not_match = user.photos.filter(status='b')
+        data = {f"Match ({match.count()})": {"color": "#30d5c8", "photos": match},
+                f"Don't match ({not_match.count()})": {"color": "#a04de5", "photos": not_match}}
         return render(request, 'homepage.html', {'data': data, 'search_input': True})
     else:
         return render(request, 'homepage.html')
@@ -29,7 +28,16 @@ def homepage(request):
 
 def photo_view(request, id):
     photo = get_object_or_404(Photo, id=id)
+    if request.method == "POST":
+        photo.status = request.POST['status']
+        photo.save()
     return render(request, 'photo_view.html', {'photo': photo})
+
+
+def photo_delete(request, id):
+    photo = get_object_or_404(Photo, id=id)
+    photo.delete()
+    return redirect('/')
 
 
 def photo_add(request):
@@ -90,7 +98,8 @@ class TagsView(APIView):
         user = CustomUser.objects.get(id=user_id)
         print(user.photos.all())
         data = [{"name": "Match", "photos": PhotoListSerializer(user.photos.filter(status='n'), many=True).data},
-                {"name": "Doesn't Match", "photos": PhotoListSerializer(user.photos.filter(status='b'), many=True).data}]
+                {"name": "Doesn't Match",
+                 "photos": PhotoListSerializer(user.photos.filter(status='b'), many=True).data}]
         print(data)
         return Response(data)
 

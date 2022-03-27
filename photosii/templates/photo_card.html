@@ -1,13 +1,5 @@
-<div class="card shadow-sm" style = "height:400px;">
-            <img style="width: 100%;height: 280px;object-fit: cover;" src="{{ photo.image.url }}" class="bd-placeholder-img card-img-top" alt="...">
-            <div class="card-body">
-              <p class="card-text" style = "height: 40px;">{{ photo.description|title }}</p>
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                    <a type="button" class="btn btn-sm text-light" style="background:#a04de5;" href="{{ photo.get_absolute_url }}">Подробнее</a>
-
-                </div>
-                <small class="text-muted">{{ photo.created_at }}</small>
-              </div>
-            </div>
-          </div>
+<a href="{{ photo.get_absolute_url }}" class="card" style="box-shadow: 1px 1px 5px; color: {{ data.color }};text-decoration: none; border-color: {{ data.color }};">
+    <img style="width: 100%;height: 180px;object-fit: cover;" src="{{ photo.image.url }}"
+         class="bd-placeholder-img card-img-top" alt="...">
+    <small class="text-muted mx-auto" style="position: relative;">{{ photo.created_at }}</small>
+</a>

@@ -6,7 +6,7 @@ import requests
 import shutil
 
 
-def start_education(photos):
+def start_train(photos):
     print('task has been taken')
 
 

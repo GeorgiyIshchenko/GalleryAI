@@ -10,7 +10,7 @@ from redis import Redis
 
 from django.core import serializers
 
-from ai.Functions import start_education
+from ai.Functions import start_train
 
 
 class CustomUser(AbstractUser):
@@ -58,7 +58,7 @@ class Photo(models.Model):
             photo_query = user.photos.filter(is_ai_tag=False)
             data = serializers.serialize('json', photo_query, fields=('image', 'status', 'user'))
             print(data)
-            job = queue.enqueue(start_education, data)
+            job = queue.enqueue(start_train, data)
             print('task has been sent')
 
     def get_absolute_url(self):

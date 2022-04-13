@@ -6,7 +6,6 @@ class Photo_Schema(Schema):
     id = fields.Int()
     tag = fields.Str()
     image = fields.Str()
-    description = fields.Str()
     status = fields.Str()
     created_at = fields.Str()
     is_ai_tag = fields.Bool()

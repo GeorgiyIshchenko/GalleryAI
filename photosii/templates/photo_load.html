@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% load bootstrap4 %}
+
+{% block title %}
+{{ photo.tag.name|title }}
+{% endblock %}
+
+{% block body %}
+
+{% include "navbar.html" %}
+
+<div class="container" style="padding:30px 0;">
+    <div class="pricing-header p-3 pb-md-4 mx-auto text-center">
+        <h1 class="display-4 fw-normal">Предсказание фото</h1>
+        <p class="fs-5 text-muted">Выберите проект и загрузите фотографии для сортировки по тэгам.</p>
+    </div>
+    <div class="card w-50 m-auto">
+        <div class="card-body">
+            <form action="{% url 'photosii:photo_load' %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-group" style="width:250px;"><label for="id_tag">Выберите тэг для
+                    обучения</label><select
+                        name="tag" class="form-control" title=""
+                        id="id_tag">
+                    {% for tag in tags %}
+                    <option value="{{ tag.id }}">{{ tag.name|title }}</option>
+                    {% endfor %}
+
+                </select></div>
+                <label class="mt-1" for="id_match">Выберите фотографии для загрузки</label>
+                <p><input id="id_match" class="btn btn-light" style="background-color:#30d5c8" type="file" name="photos" multiple
+                          accept="image/*"/></p>
+                <button type="submit" class="btn"
+                        style="padding: 5px 20px; background-color:#a04de5; color: white">Сохранить
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

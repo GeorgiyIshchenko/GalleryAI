@@ -99,7 +99,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 AUTH_USER_MODEL = 'photosii.CustomUser'
 
-DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'core.settings'
 

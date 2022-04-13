@@ -22,7 +22,7 @@
                 <div>
                     <div class="fs-3">{{ photo.created_at }}</div>
                     <div>
-                        {% if photo.is_good %}
+                        {% if photo.match %}
                             <div class="alert alert-success" role="alert" style="width:25%">
                                 Match
                             </div>
@@ -33,14 +33,14 @@
                         {% endif %}
                     </div>
                     <div>
-                        <form method="POST" class="w-50" href="{% url 'photosii:photo_view' id=photo.id %}"><input name="status"
-                                                                                                          value="b"
+                        <form method="POST" class="w-50" href="{% url 'photosii:photo_view' id=photo.id %}"><input name="match"
+                                                                                                          value="False"
                                                                                                           type="hidden"/>
                                 {% csrf_token %}
                                 <button type="submit" class="btn w-100" style="background-color: #a04de5; color: white;">Don't match</button>
                             </form>
-                            <form method="POST" class="w-50 mt-2" href="{% url 'photosii:photo_view' id=photo.id %}"><input name="status"
-                                                                                                          value="n"
+                            <form method="POST" class="w-50 mt-2" href="{% url 'photosii:photo_view' id=photo.id %}"><input name="match"
+                                                                                                          value="True"
                                                                                                           type="hidden"/>
                                 {% csrf_token %}
                                 <button type="submit" class="btn w-100" style="background-color: #30d5c8; color: white;">Match</button>

@@ -2,22 +2,31 @@
 
 {% block body %}
 
-    {% include "navbar.html" %}
+{% include "navbar.html" %}
 
-    <div class="container">
-        <div class="row">
-            {% for tag, data in data.items %}
-                <div class="col-6">
-                    <h2 class="jumbotron-heading text-center mx-auto my-5" style="color:{{ data.color }}">{{ tag |title }}</h2>
-                    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
-                        {% for photo in data.photos.all %}
-                            <div class="col">
-                                {% include "photo_card.html" %}
-                            </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
+
+<div class="container">
+    {% if add_tag %}
+    <div class="alert alert-danger my-5 text-center" role="alert">
+        Создайте тэг, для того чтобы начать обучение.
     </div>
+    {% endif %}
+    <div class="pricing-header p-3 pb-md-4 text-center text-muted mx-auto my-3">
+        <h1 class="display-5 fw-normal">{{ current_tag|title }}</h1>
+    </div>
+    <div class="row">
+        {% for tag, data in data.items %}
+        <div class="col-6">
+            <h2 class="jumbotron-heading text-center mx-auto" style="color:{{ data.color }}">{{ tag |title }}</h2>
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+                {% for photo in data.photos.all %}
+                <div class="col">
+                    {% include "photo_card.html" %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
 {% endblock %}

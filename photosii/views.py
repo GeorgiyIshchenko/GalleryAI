@@ -17,19 +17,29 @@ import json
 def homepage(request):
     if request.user.is_authenticated:
         user = request.user
-        match = user.photos.filter(status='n')
-        not_match = user.photos.filter(status='b')
-        data = {f"Match ({match.count()})": {"color": "#30d5c8", "photos": match},
-                f"Don't match ({not_match.count()})": {"color": "#a04de5", "photos": not_match}}
-        return render(request, 'homepage.html', {'data': data, 'search_input': True})
-    else:
-        return render(request, 'homepage.html')
+        if request.method == 'POST':
+            tag_name = request.POST.get('tag_name')
+            new_tag = Tag.objects.create(user=user, name=tag_name)
+            new_tag.save()
+        if user.tags.count():
+            tags = user.tags.all()
+            if request.GET.get('tag'):
+                tag = tags.get(pk=int(request.GET.get('tag')))
+            else:
+                tag = tags[0]
+            match = tag.photos.filter(match=True)
+            not_match = tag.photos.filter(match=False)
+            data = {f"Match ({match.count()})": {"color": "#30d5c8", "photos": match},
+                    f"Don't match ({not_match.count()})": {"color": "#a04de5", "photos": not_match}}
+            return render(request, 'homepage.html', {'data': data, 'dropdown': True, 'tags': tags, 'current_tag': tag})
+        return render(request, 'homepage.html', {'dropdown': True, 'add_tag': True})
+    return render(request, 'homepage.html')
 
 
 def photo_view(request, id):
     photo = get_object_or_404(Photo, id=id)
     if request.method == "POST":
-        photo.status = request.POST['status']
+        photo.match = (request.POST['match'] == "True")
         photo.save()
     return render(request, 'photo_view.html', {'photo': photo})
 
@@ -40,18 +50,34 @@ def photo_delete(request, id):
     return redirect('/')
 
 
-def photo_add(request):
-    if request.method == "POST":
-        form = PhotoForm(request.POST, request.FILES)
-        if form.is_valid():
-            photo = form.save(commit=False)
-            photo.user = request.user
+def photo_load(request):
+    if request.method=="POST":
+        tag = Tag.objects.get(pk=int(request.POST.get('tag')))
+        photos = request.FILES.getlist('photos')
+        for i in photos:
+            photo = Photo.objects.create(image=i, tag=tag)
             photo.save()
-            return redirect('/')
-        else:
-            print(form.errors)
-    form = PhotoForm()
-    return render(request, 'photo_add.html', {'form': form})
+        return redirect('/')
+    tags = request.user.tags.filter(is_trained=True)
+    return render(request, 'photo_load.html', {'tags': tags})
+
+
+def photo_create_dataset(request):
+    if request.method == "POST":
+        print(request.POST)
+        tag = Tag.objects.get(pk=int(request.POST.get('tag')))
+        match = request.FILES.getlist('match')
+        doesnt_match = request.FILES.getlist('doesnt_match')
+        for i in match:
+            photo = Photo.objects.create(image=i, match=True, tag=tag, is_ai_tag=False)
+            photo.save()
+        for i in doesnt_match:
+            photo = Photo.objects.create(image=i, match=False, tag=tag, is_ai_tag=False)
+            photo.save()
+        return redirect('/')
+    tags = request.user.tags.all()
+    form = DataSetCreationForm()
+    return render(request, 'photo_create_dataset.html', {'tags': tags, 'form': form})
 
 
 class PhotoListView(APIView):
@@ -96,23 +122,17 @@ class TagsView(APIView):
 
     def get(self, request, user_id):
         user = CustomUser.objects.get(id=user_id)
-        print(user.photos.all())
-        data = [{"name": "Match", "photos": PhotoListSerializer(user.photos.filter(status='n'), many=True).data},
-                {"name": "Doesn't Match",
-                 "photos": PhotoListSerializer(user.photos.filter(status='b'), many=True).data}]
-        print(data)
-        return Response(data)
+        tags = Tag.objects.filter(user=user)
+        serializer = TagListSerializer(tags, many=True)
+        return Response(serializer.data)
 
 
 class TagView(APIView):
 
-    def get(self, request, user_id, tag_name):
-        user_photos = Photo.objects.filter(user=user_id)
-        tag = Tag.objects.get(name=tag_name)
-        data = dict()
-        data["name"] = tag_name
-        data["photos"] = PhotoSerializer(user_photos.filter(tag=tag), many=True).data
-        return Response(data)
+    def get(self, request, user_id, tag_pk):
+        tag = Tag.objects.get(pk=tag_pk)
+        serializer = TagSerializer(tag)
+        return Response(serializer.data)
 
 
 class UsersView(APIView):

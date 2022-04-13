@@ -38,14 +38,28 @@ class PhotoJobSerializer(serializers.ModelSerializer):
 
 
 class PhotoSerializer(serializers.ModelSerializer):
-    tag = serializers.SlugRelatedField(slug_field='name', read_only=True)
 
     class Meta:
         model = Photo
-        fields = '__all__'
+        fields = ('id', 'image', 'match', 'device_path', 'created_at')
+
+
+class TagSerializer(serializers.ModelSerializer):
+    photos = PhotoSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Tag
+        fields = ('id', 'name', 'is_trained', 'photos')
+
+
+class TagListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Tag
+        fields = ('id', 'name', 'is_trained')
 
 
 class FileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Photo
-        fields = ('image', 'description', 'status', 'user', 'is_ai_tag')
+        fields = ('image', 'match', 'is_ai_tag', 'tag')

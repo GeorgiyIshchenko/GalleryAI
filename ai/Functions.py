@@ -5,9 +5,28 @@ import tensorflow as tf
 import requests
 import shutil
 
+from .Photo import Dict2Photo
+
+
+def dict_to_photo_list(photos):
+    photo_list = list()
+    for photo in photos.data:
+        photo_list.append(Dict2Photo(photo))
+    return photo_list
+
 
 def start_train(photos):
-    print('task has been taken')
+    print('train task has been taken')
+    print(photos)
+    photo_list = dict_to_photo_list(photos=photos)
+    print(photo_list)
+
+
+def start_prediction(photo_as_dict):
+    print('prediction task has been send')
+    photo = Dict2Photo(photo_as_dict)
+    print(photo)
+
 
 
 

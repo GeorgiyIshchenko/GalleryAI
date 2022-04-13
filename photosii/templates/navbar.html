@@ -1,45 +1,66 @@
 {% load i18n %}
 
 <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #a04de5">
-  <div class="container container-fluid">
-    <a class="navbar-brand" href="{% url 'photosii:homepage' %}">GalleryAI</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="{% url 'photosii:homepage' %}">{% trans "Галерея" %}</a>
-        </li>
-
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            {% trans "Дополнительно" %}
-          </a>
-          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-            <li><a class="dropdown-item" href="#">Action</a></li>
-            <li><a class="dropdown-item" href="#">Another action</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="#">Something else here</a></li>
-          </ul>
-        </li>
-          {% if user.is_authenticated %}
-              <li class="nav-item">
-                  <a class="nav-link" href="{% url 'photosii:photo_add' %}">{% trans "Загрузить фото" %}</a>
+    <div class="container container-fluid">
+        <a class="navbar-brand" href="{% url 'photosii:homepage' %}">GalleryAI</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="{% url 'photosii:homepage' %}">
+                        {% trans "Галерея" %}</a>
                 </li>
-              <li class="nav-item">
+                {% if user.is_authenticated %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        {% trans "Загрузить фото" %}
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item" href="{% url 'photosii:photo_create_dataset' %}">{% trans "Обучить" %}</a></li>
+                        <li><a class="dropdown-item" href="{% url 'photosii:photo_load' %}">{% trans "Предсказать" %}</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link " href="#" tabindex="-1" aria-disabled="true">{{ request.user.email }}</a>
-              </li>
-              <li class="nav-item">
-                    <a class="nav-link " href="{% url 'photosii:account_logout' %}" tabindex="-1" aria-disabled="true">{% trans "Выйти" %}</a>
-              </li>
-          {% else %}
-              <li class="nav-item">
-                  <a class="nav-link" href="{% url 'photosii:account_login' %}">{% trans "Войти" %}</a>
                 </li>
-          {% endif %}
+                <li class="nav-item">
+                    <a class="nav-link " href="{% url 'photosii:account_logout' %}" tabindex="-1" aria-disabled="true">
+                        {% trans "Выйти" %}</a>
+                </li>
+                {% if dropdown %}
+                <li>
+                    <form action="{% url 'photosii:homepage' %}" method="GET" enctype="multipart/form-data">
+                        <div class="form-group mx-2" style="width:250px;"><select onchange="this.form.submit()"
+                                                                                  name="tag" class="form-control"
+                                                                                  title=""
+                                                                                  id="id_tag">
+                            <option value="{{ current_tag.id }}">Выберите тэг</option>
+                            {% for tag in tags %}
+                            <option value="{{ tag.id }}">{{ tag.name|title }}</option>
+                            {% endfor %}
 
-      </ul>
+                        </select></div>
+                    </form>
+                </li>
+
+                <form class="d-flex mx-2" method="POST" action="{% url 'photosii:homepage' %}">
+                    {% csrf_token %}
+                    <input name="tag_name" class="form-control me-2" type="search"
+                           placeholder="Добавить тэг"
+                           aria-label="Search">
+                    <button class="btn btn-success" type="submit">+</button>
+                </form>
+                {% endif %}
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'photosii:account_login' %}">{% trans "Войти" %}</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
     </div>
-  </div>
 </nav>

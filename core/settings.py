@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'account',
     'rest_framework',
     'photosii',
+    'ai',
 ]
 
 REST_FRAMEWORK = {

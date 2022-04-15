@@ -46,8 +46,9 @@ class Photo(models.Model):
                 print('prediction has began')
                 redis_conn = Redis()
                 queue = Queue(connection=redis_conn)
-                print(serializers.serialize('json', [self, ]))
-                job = queue.enqueue(start_prediction, serializers.serialize('json', [self, ]))
+                json_photo = serializers.serialize('json', [self, ], fields=('image', 'match', 'tag'))
+                print(json_photo)
+                job = queue.enqueue(start_prediction, json_photo)
             else:
                 self.tag.is_trained = True
                 self.tag.save()
@@ -55,7 +56,7 @@ class Photo(models.Model):
                 redis_conn = Redis()
                 queue = Queue(connection=redis_conn)
                 photo_query = self.tag.photos.filter(is_ai_tag=False)
-                data = serializers.serialize('json', photo_query, fields=('image', 'match', 'user'))
+                data = serializers.serialize('json', photo_query, fields=('image', 'match', 'tag'))
                 job = queue.enqueue(start_train, data)
 
 

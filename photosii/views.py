@@ -55,8 +55,7 @@ def photo_load(request):
         tag = Tag.objects.get(pk=int(request.POST.get('tag')))
         photos = request.FILES.getlist('photos')
         for i in photos:
-            photo = Photo.objects.create(image=i, tag=tag)
-            photo.save()
+            Photo.objects.create(image=i, tag=tag)
         return redirect('/')
     tags = request.user.tags.filter(is_trained=True)
     return render(request, 'photo_load.html', {'tags': tags})
@@ -69,11 +68,9 @@ def photo_create_dataset(request):
         match = request.FILES.getlist('match')
         doesnt_match = request.FILES.getlist('doesnt_match')
         for i in match:
-            photo = Photo.objects.create(image=i, match=True, tag=tag, is_ai_tag=False)
-            photo.save()
+            Photo.objects.create(image=i, match=True, tag=tag, is_ai_tag=False)
         for i in doesnt_match:
-            photo = Photo.objects.create(image=i, match=False, tag=tag, is_ai_tag=False)
-            photo.save()
+            Photo.objects.create(image=i, match=False, tag=tag, is_ai_tag=False)
         return redirect('/')
     tags = request.user.tags.all()
     form = DataSetCreationForm()

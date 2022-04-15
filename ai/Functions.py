@@ -1,110 +1,146 @@
+import json
+from .Photo import Dict2Photo
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 import tensorflow as tf
 import requests
 import shutil
+import urllib.request as req
+from redis import Redis
+import rq
 
-from .Photo import Dict2Photo
+# change it to correct paths
+
+path_to_media = "Media/"  # with "/" at the end
+path_to_model = "Models"  # without "/" at the end
 
 
-def dict_to_photo_list(photos):
+def start_train(json_string):
+    try:
+        print('task has been taken. starting train')
+        json_array = json.loads(json_string)
+        clean_array = list()
+        for json_obj in json_array:
+            clean_photo = json_obj['fields']
+            clean_array.append(clean_photo)
+        json_input = json.dumps(clean_array)
+        print(json_input)
+    except json.decoder.JSONDecodeError:
+        print('\njson error\n')
+    # model = Education(json_input)
+    # model_delete_and_save(model)
+
+
+def start_prediction(json_string):
+    try:
+        print('task has been taken. starting train')
+        photo_json = json.loads(json_string)[0]['fields']
+        json_input = json.loads(json.dumps("[" + str(photo_json) + "]"))
+        print(json_input)
+    except json.decoder.JSONDecodeError:
+        print('\njson error\n')
+    # model = Education(json_input)
+    # model_delete_and_save(model)
+
+
+def deleting_old_dataset(deleteingdataset):  # removes old dataset
+    if deleteingdataset == 'train_dataset':
+        try:
+            path = os.path.join(os.path.dirname((__file__)), r'ls /home')
+            shutil.rmtree(path)
+        except:
+            print("directory is already empty")
+        finally:
+            os.mkdir(r'ls /home')
+            os.mkdir(r'ls /home/Class1')
+            os.mkdir(r'ls /home/Class2')
+    if deleteingdataset == 'prediction_dataset':
+        try:
+            path = os.path.join(os.path.dirname((__file__)), r'Onprediction')
+            shutil.rmtree(path)
+        except:
+            print("directory is already empty")
+        finally:
+            os.mkdir(r'Onprediction')
+            os.mkdir(r'Onprediction/Unsorted')
+
+
+def model_preparation():
+    try:
+        model = tf.keras.models.load_model(path_to_model)
+        return model
+    except:
+        print("Model not found")
+        return None
+
+
+def model_delete_and_save(model):
+    path = os.path.join(os.path.dirname((__file__)), path_to_model)
+    shutil.rmtree(path)
+    os.mkdir(path_to_model)
+    model.save(path_to_model)
+
+
+def download_photo(URL, name, tag, downloadtype):  # download one image using it's URL, name, tag
+    if downloadtype == 'train_dataset':
+        name = name + ".jpg"
+        if (tag == "match"):
+            name = r"ls /home/Class1/" + name
+            req.urlretrieve(URL, name)
+        if (tag == "notmatch"):
+            name = r"ls /home/Class2/" + name
+            req.urlretrieve(URL, name)
+    if downloadtype == 'prediction_dataset':
+        name = r"Onprediction/Unsorted/" + name + ".jpg"
+        req.urlretrieve(URL, name)
+
+
+def downlodad_photos_from_json(json_string, downloadtype):  # this function adds new dataset
+    output = json.loads(json_string)
     photo_list = list()
-    for photo in photos.data:
-        photo_list.append(Dict2Photo(photo))
-    return photo_list
+    for obj in output:
+        photo = Dict2Photo(obj)
+        photo_list.append(photo)
+    for i in range(len(photo_list)):
+        download_photo(URL=photo_list[i].image,
+                       name=str(i), tag=photo_list[i].tag, downloadtype=downloadtype)
 
 
-def start_train(photos):
-    print('train task has been taken')
-    print(photos)
-    photo_list = dict_to_photo_list(photos=photos)
-    print(photo_list)
+def set_dataset(json_string):  # this function removes old dataset and adds new
+    deleting_old_dataset(deleteingdataset='train_dataset')
+    downlodad_photos_from_json(json_string, downloadtype='train_dataset')
 
 
-def start_prediction(photo_as_dict):
-    print('prediction task has been send')
-    photo = Dict2Photo(photo_as_dict)
-    print(photo)
+def do_photo_array(json_string):  # do a photo array by json data
+    output = json.loads(json_string)
+    photo_class_list = list()
+    list_of_images = list()
+    for obj in output:
+        photo = Dict2Photo(obj)
+        photo_class_list.append(photo)
+    for i in range(len(photo_class_list)):
+        img = req.urlopen(photo_class_list[i].image).read()
+        list_of_images.append(img)
+    return list_of_images
 
 
-
-
-def download_photo(URL):
-    filename = URL.split("/")[-1]
-    r = requests.get(URL, stream=True)
-    if r.status_code == 200:
-        r.raw.decode_content = True
-
-        with open(filename, 'wb', ) as f:
-            shutil.copyfileobj(r.raw, f)
-
-        print('Image sucessfully Downloaded: ', filename)
-    else:
-        print('Image Couldn\'t be retreived')
-
-
-# def F_Test(model):
-#    tf.saved_model(model, "~/PycharmProjects/NeuealNetwork/Models")
-
-def Education():
-    _URL = 'https://storage.googleapis.com/mledu-datasets/cats_and_dogs_filtered.zip'
-    path_to_zip = tf.keras.utils.get_file('cats_and_dogs.zip', origin=_URL, extract=True)
-    PATH = os.path.join(os.path.dirname(path_to_zip), 'cats_and_dogs_filtered')
-    # PATH = "W:\ПРОГА\pythonProject\Photos"
-
-    train_dir = os.path.join(PATH, 'train')
-    validation_dir = os.path.join(PATH, 'validation')
-
+def Education(json_string):
     BATCH_SIZE = 32
     IMG_SIZE = (160, 160)
 
-    train_dataset = tf.keras.utils.image_dataset_from_directory(train_dir,
-                                                                shuffle=True,
-                                                                batch_size=BATCH_SIZE,
-                                                                image_size=IMG_SIZE)
+    train_dataset = dataset_by_filenames(json_string)
 
-    validation_dataset = tf.keras.utils.image_dataset_from_directory(validation_dir,
-                                                                     shuffle=True,
-                                                                     batch_size=BATCH_SIZE,
-                                                                     image_size=IMG_SIZE)
-
-    class_names = train_dataset.class_names
-
-    plt.figure(figsize=(10, 10))
-    for images, labels in train_dataset.take(1):
-        for i in range(9):
-            ax = plt.subplot(3, 3, i + 1)
-            plt.imshow(images[i].numpy().astype("uint8"))
-            plt.title(class_names[labels[i]])
-            plt.axis("off")
-
-    val_batches = tf.data.experimental.cardinality(validation_dataset)
-    test_dataset = validation_dataset.take(val_batches // 2)
-    validation_dataset = validation_dataset.skip(val_batches // 2)
-
-    print('Number of validation batches: %d' % tf.data.experimental.cardinality(validation_dataset))
-    print('Number of test batches: %d' % tf.data.experimental.cardinality(test_dataset))
+    # class_names = train_dataset.class_names
 
     AUTOTUNE = tf.data.AUTOTUNE
 
     train_dataset = train_dataset.prefetch(buffer_size=AUTOTUNE)
-    validation_dataset = validation_dataset.prefetch(buffer_size=AUTOTUNE)
-    test_dataset = test_dataset.prefetch(buffer_size=AUTOTUNE)
 
     data_augmentation = tf.keras.Sequential([
         tf.keras.layers.RandomFlip('horizontal'),
         tf.keras.layers.RandomRotation(0.2),
     ])
-
-    for image, _ in train_dataset.take(1):
-        plt.figure(figsize=(10, 10))
-        first_image = image[0]
-        for i in range(9):
-            ax = plt.subplot(3, 3, i + 1)
-            augmented_image = data_augmentation(tf.expand_dims(first_image, 0))
-            plt.imshow(augmented_image[0] / 255)
-            plt.axis('off')
 
     preprocess_input = tf.keras.applications.mobilenet_v2.preprocess_input
     rescale = tf.keras.layers.Rescaling(1. / 127.5, offset=-1)
@@ -146,96 +182,100 @@ def Education():
 
     model.summary()
 
-    initial_epochs = 30
-
-    loss0, accuracy0 = model.evaluate(validation_dataset)
-
-    print("initial loss: {:.2f}".format(loss0))
-    print("initial accuracy: {:.2f}".format(accuracy0))
+    initial_epochs = 10
 
     history = model.fit(train_dataset,
-                        epochs=initial_epochs,
-                        validation_data=validation_dataset)
-
-    acc = history.history['accuracy']
-    val_acc = history.history['val_accuracy']
-
-    loss = history.history['loss']
-    val_loss = history.history['val_loss']
-
-    plt.figure(figsize=(8, 8))
-    plt.subplot(2, 1, 1)
-    plt.plot(acc, label='Training Accuracy')
-    plt.plot(val_acc, label='Validation Accuracy')
-    plt.legend(loc='lower right')
-    plt.ylabel('Accuracy')
-    plt.ylim([min(plt.ylim()), 1])
-    plt.title('Training and Validation Accuracy')
-
-    plt.subplot(2, 1, 2)
-    plt.plot(loss, label='Training Loss')
-    plt.plot(val_loss, label='Validation Loss')
-    plt.legend(loc='upper right')
-    plt.ylabel('Cross Entropy')
-    plt.ylim([0, 1.0])
-    plt.title('Training and Validation Loss')
-    plt.xlabel('epoch')
-    plt.show()
+                        epochs=initial_epochs)
 
     base_model.trainable = True
 
-    # Let's take a look to see how many layers are in the base model
-    print("Number of layers in the base model: ", len(base_model.layers))
-
-    # Fine-tune from this layer onwards
     fine_tune_at = 100
 
-    # Freeze all the layers before the `fine_tune_at` layer
     for layer in base_model.layers[:fine_tune_at]:
         layer.trainable = False
 
-    model.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
-                  optimizer=tf.keras.optimizers.RMSprop(learning_rate=base_learning_rate / 10),
-                  metrics=['accuracy'])
-
     model.summary()
 
-    print(len(model.trainable_variables))
-
     fine_tune_epochs = 10
+
     total_epochs = initial_epochs + fine_tune_epochs
 
-    history_fine = model.fit(train_dataset,
-                             epochs=total_epochs,
-                             initial_epoch=history.epoch[-1],
-                             validation_data=validation_dataset)
+    history_fine = model.fit(train_dataset, epochs=total_epochs, initial_epoch=history.epoch[-1])
 
-    acc += history_fine.history['accuracy']
-    val_acc += history_fine.history['val_accuracy']
+    return model
 
-    loss += history_fine.history['loss']
-    val_loss += history_fine.history['val_loss']
 
-    plt.figure(figsize=(8, 8))
-    plt.subplot(2, 1, 1)
-    plt.plot(acc, label='Training Accuracy')
-    plt.plot(val_acc, label='Validation Accuracy')
-    plt.ylim([0.8, 1])
-    plt.plot([initial_epochs - 1, initial_epochs - 1],
-             plt.ylim(), label='Start Fine Tuning')
-    plt.legend(loc='lower right')
-    plt.title('Training and Validation Accuracy')
+def _parce_function(filename, label):
+    filename = path_to_media + filename
+    image_string = tf.io.read_file(filename)
+    image_decoded = tf.image.decode_jpeg(image_string, channels=3)
+    image = tf.cast(image_decoded, tf.float32)
+    image = tf.image.resize(image, [160, 160], preserve_aspect_ratio=False)
+    return image, label
 
-    plt.subplot(2, 1, 2)
-    plt.plot(loss, label='Training Loss')
-    plt.plot(val_loss, label='Validation Loss')
-    plt.ylim([0, 1.0])
-    plt.plot([initial_epochs - 1, initial_epochs - 1],
-             plt.ylim(), label='Start Fine Tuning')
-    plt.legend(loc='upper right')
-    plt.title('Training and Validation Loss')
-    plt.xlabel('epoch')
-    plt.show()
 
-    loss, accuracy = model.evaluate(test_dataset)
-    print('Test accuracy :', accuracy)
+def dataset_by_filenames(json_string):
+    output = json.loads(json_string)
+    photo_list = list()
+
+    filenames = list()
+    labels = list()
+
+    for obj in output:
+        photo = Dict2Photo(obj)
+        photo_list.append(photo)
+
+    for photo in photo_list:
+        filenames.append(photo.image)
+        if photo.match:
+            labels.append(1)
+        elif not photo.match:
+            labels.append(0)
+        else:
+            labels.append(-1)
+
+    total_amount = len(labels)
+
+    filenames = tf.constant(filenames)
+    labels = tf.constant(labels)
+
+    dataset = tf.data.Dataset.from_tensor_slices((filenames, labels))
+
+    dataset = dataset.map(_parce_function)
+    dataset = dataset.batch(total_amount)
+
+    return dataset
+
+
+def join_prediction_dataset():
+    prediction_dir = os.path.join('Onprediction')
+    BATCH_SIZE = 32
+    IMG_SIZE = (160, 160)
+    prediction_dataset = tf.keras.utils.image_dataset_from_directory(prediction_dir,
+                                                                     shuffle=True,
+                                                                     batch_size=BATCH_SIZE,
+                                                                     image_size=IMG_SIZE)
+    return prediction_dataset
+
+
+def do_prediction_dataset(json_string):
+    deleting_old_dataset(deleteingdataset='prediction_dataset')
+    downlodad_photos_from_json(json_string, downloadtype='prediction_dataset')
+    return join_prediction_dataset()
+
+
+def Prediction(json_string):
+    model = model_preparation()
+    prediction_dataset = dataset_by_filenames(json_string)
+    AUTOTUNE = tf.data.AUTOTUNE
+
+    prediction_dataset = prediction_dataset.prefetch(buffer_size=AUTOTUNE)
+
+    image_batch, label_batch = prediction_dataset.as_numpy_iterator().next()
+    predictions = model.predict_on_batch(image_batch).flatten()
+
+    predictions = tf.nn.sigmoid(predictions)
+    predictions = tf.where(predictions < 0.5, 0, 1)
+
+    # print('predictions:\n', predictions.numpy())
+    return predictions.numpy()

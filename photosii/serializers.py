@@ -41,7 +41,7 @@ class PhotoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Photo
-        fields = ('id', 'image', 'match', 'device_path', 'created_at')
+        fields = ('id', 'image', 'match', 'device_path', 'created_at', 'tag')
 
 
 class TagSerializer(serializers.ModelSerializer):

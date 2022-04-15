@@ -14,15 +14,11 @@
                         {% trans "Галерея" %}</a>
                 </li>
                 {% if user.is_authenticated %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
-                       data-bs-toggle="dropdown" aria-expanded="false">
-                        {% trans "Загрузить фото" %}
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="{% url 'photosii:photo_create_dataset' %}">{% trans "Обучить" %}</a></li>
-                        <li><a class="dropdown-item" href="{% url 'photosii:photo_load' %}">{% trans "Предсказать" %}</a></li>
-                    </ul>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'photosii:photo_create_dataset' %}">{% trans "Обучить" %}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'photosii:photo_load' %}">{% trans "Предсказать" %}</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link " href="#" tabindex="-1" aria-disabled="true">{{ request.user.email }}</a>

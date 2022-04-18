@@ -11,7 +11,7 @@ from redis import Redis
 
 from django.core import serializers
 
-from ai.Functions import start_train, start_prediction
+from ai.functions import start_train, start_prediction
 
 
 class CustomUser(AbstractUser):
@@ -46,9 +46,10 @@ class Photo(models.Model):
                 print('prediction has began')
                 redis_conn = Redis()
                 queue = Queue(connection=redis_conn)
-                json_photo = serializers.serialize('json', [self, ], fields=('image', 'match', 'tag'))
-                print(json_photo)
-                job = queue.enqueue(start_prediction, json_photo)
+                photo_query = self.tag.photos.filter(match=None)
+                data = serializers.serialize('json', photo_query, fields=('image', 'tag'))
+                print(data)
+                job = queue.enqueue(start_prediction, data, self.tag.user.email)
             else:
                 self.tag.is_trained = True
                 self.tag.save()
@@ -57,7 +58,7 @@ class Photo(models.Model):
                 queue = Queue(connection=redis_conn)
                 photo_query = self.tag.photos.filter(is_ai_tag=False)
                 data = serializers.serialize('json', photo_query, fields=('image', 'match', 'tag'))
-                job = queue.enqueue(start_train, data)
+                job = queue.enqueue(start_train, data, self.tag.user.email)
 
 
     def get_absolute_url(self):

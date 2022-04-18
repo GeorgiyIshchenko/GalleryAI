@@ -1,8 +1,8 @@
 import json
-from Photo import Photo_Schema, Dict2Photo
+from photo import Dict2Photo
 from redis import Redis
 import rq
-from Functions import Education, download_photo
+from functions import Education, download_photo
 
 queue = rq.Queue('list0', connection=Redis.from_url('redis://'))
 args = []

@@ -11,7 +11,7 @@ from redis import Redis
 
 from django.core import serializers
 
-from ai.Functions import start_train, start_prediction
+from ai.functions import start_train, start_prediction
 
 
 class CustomUser(AbstractUser):
@@ -51,6 +51,7 @@ class Photo(models.Model):
                 print(photo_query)
                 job = queue.enqueue(start_prediction, photo_query)
             else:
+
                 print('train has began')
                 redis_conn = Redis()
                 queue = Queue(connection=redis_conn)

@@ -1,5 +1,5 @@
 import json
-from .Photo import Dict2Photo
+from .photo import Dict2Photo
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -12,11 +12,11 @@ import rq
 
 # change it to correct paths
 
-path_to_media = "Media/"  # with "/" at the end
-path_to_model = "Models"  # without "/" at the end
+path_to_media = "media/"  # with "/" at the end
+path_to_models = "/home/blawald/PycharmProjects/GalleryAI/models/"  # without "/" at the end
 
 
-def start_train(json_string):
+def start_train(json_string, user_id):
     try:
         print('task has been taken. starting train')
         json_array = json.loads(json_string)
@@ -26,22 +26,29 @@ def start_train(json_string):
             clean_array.append(clean_photo)
         json_input = json.dumps(clean_array)
         print(json_input)
+        model = Education(json_input)
+        tag = clean_photo["tag"]
+        model_delete_and_save(model, str(user_id) + "/", str(tag))
     except json.decoder.JSONDecodeError:
         print('\njson error\n')
-    # model = Education(json_input)
-    # model_delete_and_save(model)
 
 
-def start_prediction(json_string):
+def start_prediction(json_string, user_id):
     try:
         print('task has been taken. starting train')
-        photo_json = json.loads(json_string)[0]['fields']
-        json_input = json.loads(json.dumps("[" + str(photo_json) + "]"))
+        json_array = json.loads(json_string)
+        clean_array = list()
+        for json_obj in json_array:
+            clean_photo = json_obj['fields']
+        clean_array.append(clean_photo)
+        json_input = json.dumps(clean_array)
         print(json_input)
+        tag = clean_photo["tag"]
+        result = Prediction(json_input, str(user_id) + "/", str(tag))
+        print(result)
+        return result
     except json.decoder.JSONDecodeError:
         print('\njson error\n')
-    # model = Education(json_input)
-    # model_delete_and_save(model)
 
 
 def deleting_old_dataset(deleteingdataset):  # removes old dataset
@@ -66,7 +73,8 @@ def deleting_old_dataset(deleteingdataset):  # removes old dataset
             os.mkdir(r'Onprediction/Unsorted')
 
 
-def model_preparation():
+def model_preparation(user_name, model_name):
+    path_to_model = path_to_models + user_name + model_name
     try:
         model = tf.keras.models.load_model(path_to_model)
         return model
@@ -75,11 +83,16 @@ def model_preparation():
         return None
 
 
-def model_delete_and_save(model):
-    path = os.path.join(os.path.dirname((__file__)), path_to_model)
-    shutil.rmtree(path)
-    os.mkdir(path_to_model)
-    model.save(path_to_model)
+def model_delete_and_save(model, user_name, model_name):
+    path_to_model = path_to_models + user_name + model_name
+    try:
+        path = os.path.join(os.path.dirname((__file__)), path_to_model)
+        shutil.rmtree(path)
+    except:
+        print("directory is already empty")
+    finally:
+        os.mkdir(path_to_model)
+        model.save(path_to_model)
 
 
 def download_photo(URL, name, tag, downloadtype):  # download one image using it's URL, name, tag
@@ -129,7 +142,7 @@ def Education(json_string):
     BATCH_SIZE = 32
     IMG_SIZE = (160, 160)
 
-    train_dataset = dataset_by_filenames(json_string)
+    train_dataset = dataset_by_filenames(json_string, "train")
 
     # class_names = train_dataset.class_names
 
@@ -214,25 +227,34 @@ def _parce_function(filename, label):
     return image, label
 
 
-def dataset_by_filenames(json_string):
+def dataset_by_filenames(json_string, mode):
     output = json.loads(json_string)
     photo_list = list()
 
     filenames = list()
     labels = list()
 
+    print(type(output))
+    print(output)
+    print(output[0]["image"])
+
     for obj in output:
         photo = Dict2Photo(obj)
         photo_list.append(photo)
 
-    for photo in photo_list:
-        filenames.append(photo.image)
-        if photo.match:
-            labels.append(1)
-        elif not photo.match:
+    print(photo_list[0].__dict__.keys())
+
+    if mode == "train":
+        for photo in photo_list:
+            filenames.append(photo.image)
+            if photo.match:
+                labels.append(1)
+            elif not photo.match:
+                labels.append(0)
+    elif mode == "prediction":
+        for photo in photo_list:
+            filenames.append(photo.image)
             labels.append(0)
-        else:
-            labels.append(-1)
 
     total_amount = len(labels)
 
@@ -264,9 +286,9 @@ def do_prediction_dataset(json_string):
     return join_prediction_dataset()
 
 
-def Prediction(json_string):
-    model = model_preparation()
-    prediction_dataset = dataset_by_filenames(json_string)
+def Prediction(json_string, user_name, model_name):
+    model = model_preparation(user_name, model_name)
+    prediction_dataset = dataset_by_filenames(json_string, "prediction")
     AUTOTUNE = tf.data.AUTOTUNE
 
     prediction_dataset = prediction_dataset.prefetch(buffer_size=AUTOTUNE)
@@ -275,7 +297,7 @@ def Prediction(json_string):
     predictions = model.predict_on_batch(image_batch).flatten()
 
     predictions = tf.nn.sigmoid(predictions)
-    predictions = tf.where(predictions < 0.5, 0, 1)
+    #predictions = tf.where(predictions < 0.5, 0, 1)
 
     # print('predictions:\n', predictions.numpy())
     return predictions.numpy()

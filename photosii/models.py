@@ -46,12 +46,11 @@ class Photo(models.Model):
                 print('prediction has began')
                 redis_conn = Redis()
                 queue = Queue(connection=redis_conn)
-                json_photo = serializers.serialize('json', [self, ], fields=('image', 'match', 'tag'))
-                print(json_photo)
-                job = queue.enqueue(start_prediction, json_photo)
+                photo_query = self.tag.photos.filter(match=None)
+                data = serializers.serialize('json', photo_query, fields=('image', 'tag'))
+                print(photo_query)
+                job = queue.enqueue(start_prediction, photo_query)
             else:
-                self.tag.is_trained = True
-                self.tag.save()
                 print('train has began')
                 redis_conn = Redis()
                 queue = Queue(connection=redis_conn)

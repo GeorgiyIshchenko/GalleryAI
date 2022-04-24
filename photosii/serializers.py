@@ -62,4 +62,4 @@ class TagListSerializer(serializers.ModelSerializer):
 class FileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Photo
-        fields = ('image', 'match', 'is_ai_tag', 'tag')
+        fields = ('image', 'match', 'is_ai_tag', 'tag', 'device_path')

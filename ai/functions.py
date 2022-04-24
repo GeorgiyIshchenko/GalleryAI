@@ -13,7 +13,7 @@ import rq
 # change it to correct paths
 
 path_to_media = "media/"  # with "/" at the end
-path_to_models = "/home/blawald/PycharmProjects/GalleryAI/models/"  # without "/" at the end
+path_to_models = "/home/blawald/PycharmProjects/GalleryAI/models/"  # with "/" at the end
 
 
 def start_train(json_string, user_id):
@@ -28,7 +28,7 @@ def start_train(json_string, user_id):
         print(json_input)
         model = Education(json_input)
         tag = clean_photo["tag"]
-        model_delete_and_save(model, str(user_id) + "/", str(tag))
+        model_delete_and_save(model, str(user_id), str(tag))
     except json.decoder.JSONDecodeError:
         print('\njson error\n')
 
@@ -44,7 +44,7 @@ def start_prediction(json_string, user_id):
         json_input = json.dumps(clean_array)
         print(json_input)
         tag = clean_photo["tag"]
-        result = Prediction(json_input, str(user_id) + "/", str(tag))
+        result = Prediction(json_input, str(user_id), str(tag))
         print(result)
         return result
     except json.decoder.JSONDecodeError:
@@ -82,9 +82,18 @@ def model_preparation(user_name, model_name):
         print("Model not found")
         return None
 
+def check_user_folder(user_name):
+    user_folder = path_to_models + user_name
+    try:
+        os.mkdir(user_folder)
+    except:
+        print("user folder is already created")
+
+
 
 def model_delete_and_save(model, user_name, model_name):
-    path_to_model = path_to_models + user_name + model_name
+    check_user_folder(user_name)
+    path_to_model = path_to_models + user_name + "/" + model_name
     try:
         path = os.path.join(os.path.dirname((__file__)), path_to_model)
         shutil.rmtree(path)

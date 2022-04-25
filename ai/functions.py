@@ -74,7 +74,7 @@ def deleting_old_dataset(deleteingdataset):  # removes old dataset
 
 
 def model_preparation(user_name, model_name):
-    path_to_model = path_to_models + user_name + model_name
+    path_to_model = path_to_models + user_name + "/" + model_name
     try:
         model = tf.keras.models.load_model(path_to_model)
         return model
@@ -274,6 +274,8 @@ def dataset_by_filenames(json_string, mode):
 
     dataset = dataset.map(_parce_function)
     dataset = dataset.batch(total_amount)
+
+    print(type(dataset))
 
     return dataset
 

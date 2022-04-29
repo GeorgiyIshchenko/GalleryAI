@@ -29,7 +29,6 @@ def start_train(json_string, user_id):
         model = Education(json_input)
         tag = clean_photo["tag"]
         model_delete_and_save(model, str(user_id), str(tag))
-
     except json.decoder.JSONDecodeError:
         print('\njson error\n')
 
@@ -315,4 +314,10 @@ def Prediction(json_string, user_name, model_name):
 
     predictions = tf.nn.sigmoid(predictions)
     predictions = tf.where(predictions < 0.5, 0, 1)
-    return predictions.numpy()
+    result = []
+    for i in range(len(predictions)):
+        if predictions[i] == 1:
+            result.append(True)
+        else:
+            result.append(False)
+    return result

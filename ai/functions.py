@@ -29,6 +29,7 @@ def start_train(json_string, user_id):
         model = Education(json_input)
         tag = clean_photo["tag"]
         model_delete_and_save(model, str(user_id), str(tag))
+
     except json.decoder.JSONDecodeError:
         print('\njson error\n')
 
@@ -49,6 +50,10 @@ def start_prediction(json_string, user_id):
         return result
     except json.decoder.JSONDecodeError:
         print('\njson error\n')
+
+
+def do_predicrion_resut(predictions, ):
+    print(123)
 
 
 def deleting_old_dataset(deleteingdataset):  # removes old dataset
@@ -82,13 +87,13 @@ def model_preparation(user_name, model_name):
         print("Model not found")
         return None
 
+
 def check_user_folder(user_name):
     user_folder = path_to_models + user_name
     try:
         os.mkdir(user_folder)
     except:
         print("user folder is already created")
-
 
 
 def model_delete_and_save(model, user_name, model_name):
@@ -197,7 +202,8 @@ def Education(json_string):
     outputs = prediction_layer(x)
     model = tf.keras.Model(inputs, outputs)
 
-    base_learning_rate = 0.0001
+    # base_learning_rate = 0.0001
+    base_learning_rate = 0.0025
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=base_learning_rate),
                   loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
                   metrics=['accuracy'])
@@ -308,7 +314,5 @@ def Prediction(json_string, user_name, model_name):
     predictions = model.predict_on_batch(image_batch).flatten()
 
     predictions = tf.nn.sigmoid(predictions)
-    #predictions = tf.where(predictions < 0.5, 0, 1)
-
-    # print('predictions:\n', predictions.numpy())
+    predictions = tf.where(predictions < 0.5, 0, 1)
     return predictions.numpy()

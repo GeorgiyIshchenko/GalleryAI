@@ -1,3 +1,4 @@
+'''
 from .models import Photo, Tag
 
 
@@ -19,3 +20,4 @@ def prediction_result(data):
         else:
             photo.match = False
         photo.save()
+'''

@@ -1,10 +1,15 @@
 import json
+import os
 
 from django.db import models
 from django.db.models import Q
+from django.dispatch import receiver
 from django.shortcuts import reverse
 from django.contrib.auth.models import AbstractUser
+from django.core.files.base import ContentFile
 from django.forms.models import model_to_dict
+
+from PIL import Image
 
 from rq import Queue
 from redis import Redis
@@ -25,8 +30,19 @@ class CustomUser(AbstractUser):
         return self.email
 
 
+def gen_image_filename(instance, filename):
+    return '{0}/{1}/{2}/{3}'.format(instance.tag.user.email, instance.tag.name,
+                                    "match" if instance.match else "not_match", filename)
+
+
+def gen_image_filename_full(instance, filename):
+    return '{0}/{1}/{2}/{3}'.format(instance.tag.user.email, instance.tag.name,
+                                    "match" if instance.match else "not_match", "full_" + filename)
+
+
 class Photo(models.Model):
-    image = models.ImageField(upload_to='')
+    image = models.ImageField(upload_to=gen_image_filename)
+    full_image = models.ImageField(upload_to=gen_image_filename_full, null=True, blank=True)
     tag = models.ForeignKey('Tag', on_delete=models.CASCADE, related_name='photos', db_index=True, null=True,
                             blank=True)
     match = models.BooleanField(null=True, blank=True)
@@ -39,25 +55,32 @@ class Photo(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        if not self.is_ai_tag and self.tag.photos.filter(
-                Q(is_ai_tag=False) and Q(match=True)).count() >= 20 and self.tag.photos.filter(
-            Q(is_ai_tag=False) and Q(match=False)).count() >= 20:
-            if self.tag.is_trained:
-                print('prediction has began')
-                redis_conn = Redis()
-                queue = Queue(connection=redis_conn)
-                photo_query = self.tag.photos.filter(match=None)
-                data = serializers.serialize('json', photo_query, fields=('image', 'tag'))
-                print(data)
-                job = queue.enqueue(start_prediction, data, self.tag.user.email)
-            else:
-                print('train has began')
-                redis_conn = Redis()
-                queue = Queue(connection=redis_conn)
-                photo_query = self.tag.photos.filter(is_ai_tag=False)
-                data = serializers.serialize('json', photo_query, fields=('image', 'match', 'tag'))
-                job = queue.enqueue(start_train, data, self.tag.user.email)
-
+        if not self.full_image:
+            full_image = ContentFile(self.image.read())
+            new_picture_name = self.image.name.split("/")[-1]
+            self.full_image.save(new_picture_name, full_image)
+            image = Image.open(self.image.path)
+            if image.width > 512 or image.height > 512:
+                image.thumbnail((512, int(image.height / image.width * 512)))
+                image.save(self.image.path)
+            if not self.is_ai_tag and self.tag.photos.filter(
+                    Q(is_ai_tag=False) and Q(match=True)).count() >= 20 and self.tag.photos.filter(
+                Q(is_ai_tag=False) and Q(match=False)).count() >= 20:
+                if self.tag.is_trained:
+                    print('prediction has began')
+                    redis_conn = Redis()
+                    queue = Queue(connection=redis_conn)
+                    photo_query = self.tag.photos.filter(match=None)
+                    data = serializers.serialize('json', photo_query, fields=('image', 'tag'))
+                    print(data)
+                    job = queue.enqueue(start_prediction, data, self.tag.user.email)
+                else:
+                    print('train has began')
+                    redis_conn = Redis()
+                    queue = Queue(connection=redis_conn)
+                    photo_query = self.tag.photos.filter(is_ai_tag=False)
+                    data = serializers.serialize('json', photo_query, fields=('image', 'match', 'tag'))
+                    job = queue.enqueue(start_train, data, self.tag.user.email)
 
     def get_absolute_url(self):
         return reverse('photosii:photo_view', kwargs={'id': self.id})
@@ -70,6 +93,19 @@ class Photo(models.Model):
 
     class Meta:
         ordering = ('-created_at',)
+
+
+def _delete_file(path):
+    if os.path.isfile(path):
+        os.remove(path)
+
+
+@receiver(models.signals.post_delete, sender=Photo)
+def delete_file(sender, instance, *args, **kwargs):
+    if instance.image:
+        _delete_file(instance.image.path)
+    if instance.full_image:
+        _delete_file(instance.full_image.path)
 
 
 class Tag(models.Model):

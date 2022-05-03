@@ -23,6 +23,7 @@ def start_train(json_string, user_id):
         clean_array = list()
         for json_obj in json_array:
             clean_photo = json_obj['fields']
+            clean_photo['id'] = json_obj['pk']
             clean_array.append(clean_photo)
         json_input = json.dumps(clean_array)
         print(json_input)
@@ -35,18 +36,36 @@ def start_train(json_string, user_id):
 
 def start_prediction(json_string, user_id):
     try:
+        id_list = list()
         print('task has been taken. starting train')
         json_array = json.loads(json_string)
         clean_array = list()
         for json_obj in json_array:
             clean_photo = json_obj['fields']
-        clean_array.append(clean_photo)
+            clean_photo['id'] = json_obj['pk']
+            clean_array.append(clean_photo)
         json_input = json.dumps(clean_array)
+
         print(json_input)
+
         tag = clean_photo["tag"]
-        result = Prediction(json_input, str(user_id), str(tag))
-        print(result)
-        return result
+
+        bool_result = Prediction(json_input, str(user_id), str(tag))
+
+        output = json.loads(json_input)
+
+        for obj in output:
+            photo = Dict2Photo(obj)
+            id_list.append(photo.id)
+
+        names_and_bool_result = dict()
+
+        names_and_bool_result = dict(zip(id_list, bool_result))
+
+        print(names_and_bool_result)
+
+        return names_and_bool_result
+
     except json.decoder.JSONDecodeError:
         print('\njson error\n')
 

@@ -1,5 +1,6 @@
 import json
 import os
+import time
 
 from django.db import models
 from django.db.models import Q
@@ -8,6 +9,7 @@ from django.shortcuts import reverse
 from django.contrib.auth.models import AbstractUser
 from django.core.files.base import ContentFile
 from django.forms.models import model_to_dict
+from django.core.serializers.json import DjangoJSONEncoder
 
 from PIL import Image
 
@@ -40,7 +42,15 @@ def gen_image_filename_full(instance, filename):
                                     "match" if instance.match else "not_match", "full_" + filename)
 
 
+class LazyEncoder(DjangoJSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Photo):
+            return str(obj)
+        return super().default(obj)
+
+
 class Photo(models.Model):
+    id = models.AutoField(primary_key=True)
     image = models.ImageField(upload_to=gen_image_filename)
     full_image = models.ImageField(upload_to=gen_image_filename_full, null=True, blank=True)
     tag = models.ForeignKey('Tag', on_delete=models.CASCADE, related_name='photos', db_index=True, null=True,
@@ -71,15 +81,31 @@ class Photo(models.Model):
                     redis_conn = Redis()
                     queue = Queue(connection=redis_conn)
                     photo_query = self.tag.photos.filter(match=None)
-                    data = serializers.serialize('json', photo_query, fields=('pk', 'image', 'tag'))
+                    data = serializers.serialize('json', photo_query, cls=LazyEncoder)
                     print(data)
-                    job = queue.enqueue(start_prediction, data, self.tag.user.email)
+                    args = [data, self.tag.user.email]
+                    job = queue.enqueue(start_prediction, args=args)
+                    while job.is_finished == False:
+                        job.refresh()
+                        time.sleep(1)
+
+                    result = job.result
+
+                    for id in result.keys():
+                        photo = Photo.objects.get(id=id)
+                        photo.is_ai_tag = True
+                        if result[id]:
+                            photo.match = True
+                        else:
+                            photo.match = False
+                        photo.save()
+
                 else:
                     print('train has began')
                     redis_conn = Redis()
                     queue = Queue(connection=redis_conn)
                     photo_query = self.tag.photos.filter(is_ai_tag=False)
-                    data = serializers.serialize('json', photo_query, fields=('pk','image', 'match', 'tag'))
+                    data = serializers.serialize('json', photo_query, cls=LazyEncoder)
                     job = queue.enqueue(start_train, data, self.tag.user.email)
 
     def get_absolute_url(self):

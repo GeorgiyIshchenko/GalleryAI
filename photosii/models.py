@@ -107,6 +107,8 @@ class Photo(models.Model):
                     photo_query = self.tag.photos.filter(is_ai_tag=False)
                     data = serializers.serialize('json', photo_query, cls=LazyEncoder)
                     job = queue.enqueue(start_train, data, self.tag.user.email)
+                    self.is_trained = True
+
 
     def get_absolute_url(self):
         return reverse('photosii:photo_view', kwargs={'id': self.id})

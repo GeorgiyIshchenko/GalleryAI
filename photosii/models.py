@@ -71,7 +71,7 @@ class Photo(models.Model):
                     redis_conn = Redis()
                     queue = Queue(connection=redis_conn)
                     photo_query = self.tag.photos.filter(match=None)
-                    data = serializers.serialize('json', photo_query, fields=('image', 'tag'))
+                    data = serializers.serialize('json', photo_query, fields=('pk', 'image', 'tag'))
                     print(data)
                     job = queue.enqueue(start_prediction, data, self.tag.user.email)
                 else:
@@ -79,7 +79,7 @@ class Photo(models.Model):
                     redis_conn = Redis()
                     queue = Queue(connection=redis_conn)
                     photo_query = self.tag.photos.filter(is_ai_tag=False)
-                    data = serializers.serialize('json', photo_query, fields=('image', 'match', 'tag'))
+                    data = serializers.serialize('json', photo_query, fields=('pk','image', 'match', 'tag'))
                     job = queue.enqueue(start_train, data, self.tag.user.email)
 
     def get_absolute_url(self):

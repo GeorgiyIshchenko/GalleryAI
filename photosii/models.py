@@ -1,6 +1,7 @@
 import json
 import os
 import time
+import asyncio
 
 from django.db import models
 from django.db.models import Q
@@ -42,13 +43,6 @@ def gen_image_filename_full(instance, filename):
                                     "match" if instance.match else "not_match", "full_" + filename)
 
 
-class LazyEncoder(DjangoJSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, Photo):
-            return str(obj)
-        return super().default(obj)
-
-
 class Photo(models.Model):
     id = models.AutoField(primary_key=True)
     image = models.ImageField(upload_to=gen_image_filename)
@@ -71,44 +65,8 @@ class Photo(models.Model):
             self.full_image.save(new_picture_name, full_image)
             image = Image.open(self.image.path)
             if image.width > 512 or image.height > 512:
-                image.thumbnail((512, int(image.height / image.width * 512)))
+                image.thumbnail((512, 512))
                 image.save(self.image.path)
-            if not self.is_ai_tag and self.tag.photos.filter(
-                    Q(is_ai_tag=False) and Q(match=True)).count() >= 20 and self.tag.photos.filter(
-                Q(is_ai_tag=False) and Q(match=False)).count() >= 20:
-                if self.tag.is_trained:
-                    print('prediction has began')
-                    redis_conn = Redis()
-                    queue = Queue(connection=redis_conn)
-                    photo_query = self.tag.photos.filter(match=None)
-                    data = serializers.serialize('json', photo_query, cls=LazyEncoder)
-                    print(data)
-                    args = [data, self.tag.user.email]
-                    job = queue.enqueue(start_prediction, args=args)
-                    while job.is_finished == False:
-                        job.refresh()
-                        time.sleep(1)
-
-                    result = job.result
-
-                    for id in result.keys():
-                        photo = Photo.objects.get(id=id)
-                        photo.is_ai_tag = True
-                        if result[id]:
-                            photo.match = True
-                        else:
-                            photo.match = False
-                        photo.save()
-
-                else:
-                    print('train has began')
-                    redis_conn = Redis()
-                    queue = Queue(connection=redis_conn)
-                    photo_query = self.tag.photos.filter(is_ai_tag=False)
-                    data = serializers.serialize('json', photo_query, cls=LazyEncoder)
-                    job = queue.enqueue(start_train, data, self.tag.user.email)
-                    self.is_trained = True
-
 
     def get_absolute_url(self):
         return reverse('photosii:photo_view', kwargs={'id': self.id})
@@ -140,15 +98,61 @@ class Tag(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, blank=True, null=True, related_name='tags')
     name = models.CharField(max_length=64, default='default', unique=True)
     is_trained = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        if self.photos.filter(Q(is_ai_tag=False) and Q(match=True)).count() >= 20 and self.photos.filter(
-                Q(is_ai_tag=False) and Q(match=False)).count() >= 20:
-            self.is_trained = True
 
     def __str__(self):
-        return f'{self.name}'
+        return f'{self.name} - {self.pk}'
 
     class Meta:
-        ordering = ('-name',)
+        ordering = ('name',)
+
+
+@receiver(models.signals.post_save, sender=Photo)
+def train(sender, instance, **kwargs):
+    tag = instance.tag
+    if tag.photos.filter(Q(is_ai_tag=False) and Q(match=True)).count() >= 20 and tag.photos.filter(
+            Q(is_ai_tag=False) and Q(match=False)).count() >= 20 and not instance.is_ai_tag:
+        photos = tag.photos.filter(is_ai_tag=False)
+        data = serializers.serialize('json', photos)
+        email = tag.user.email
+
+        redis_conn = Redis()
+        queue = Queue(connection=redis_conn)
+        job = queue.enqueue(start_train, data, email)
+
+        while not job.is_finished:
+            job.refresh()
+            time.sleep(1)
+        else:
+            tag.is_trained = True
+            tag.save()
+
+
+@receiver(models.signals.post_save, sender=Photo)
+def predict(sender, instance, **kwargs):
+    tag = instance.tag
+    if tag.is_trained:
+        photo_query = tag.photos.filter(match=None)
+        if photo_query.count() > 0:
+            data = serializers.serialize('json', photo_query)
+            email = tag.user.email
+
+            redis_conn = Redis()
+            queue = Queue(connection=redis_conn)
+            job = queue.enqueue(start_prediction, data, email)
+
+            while not job.is_finished:
+                job.refresh()
+                time.sleep(1)
+
+            for photo_id in job.result.keys():
+                photo = Photo.objects.get(id=photo_id)
+                photo.is_ai_tag = True
+                if job.result[photo_id]:
+                    photo.match = True
+                else:
+                    photo.match = False
+                photo.save()

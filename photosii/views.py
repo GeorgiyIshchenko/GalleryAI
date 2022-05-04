@@ -22,7 +22,8 @@ def homepage(request):
             new_tag = Tag.objects.create(user=user, name=tag_name)
             new_tag.save()
         if user.tags.count():
-            tags = user.tags.all()
+            tags = user.tags.all().order_by('created_at')
+            print(tags)
             if request.GET.get('tag'):
                 tag = tags.get(pk=int(request.GET.get('tag')))
             else:
@@ -104,6 +105,7 @@ class PhotoPost(APIView):
         file_serializer = FileSerializer(data=request.data)
         if file_serializer.is_valid():
             file_serializer.save()
+            print(file_serializer)
             return Response(file_serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(file_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -119,7 +121,7 @@ class TagsView(APIView):
 
     def get(self, request, user_id):
         user = CustomUser.objects.get(id=user_id)
-        tags = Tag.objects.filter(user=user)
+        tags = Tag.objects.filter(user=user).order_by('created_at')
         serializer = TagListSerializer(tags, many=True)
         return Response(serializer.data)
 

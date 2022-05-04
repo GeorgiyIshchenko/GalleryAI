@@ -13,7 +13,7 @@ import rq
 # change it to correct paths
 
 path_to_media = "media/"  # with "/" at the end
-path_to_models = "/home/blawald/PycharmProjects/GalleryAI/models/"  # with "/" at the end
+path_to_models = "ai/models/"  # with "/" at the end
 
 
 def start_train(json_string, user_id):
@@ -25,10 +25,10 @@ def start_train(json_string, user_id):
             clean_photo = json_obj['fields']
             clean_photo['id'] = json_obj['pk']
             clean_array.append(clean_photo)
+            tag = clean_photo["tag"]
         json_input = json.dumps(clean_array)
         print(json_input)
         model = Education(json_input)
-        tag = clean_photo["tag"]
         model_delete_and_save(model, str(user_id), str(tag))
     except json.decoder.JSONDecodeError:
         print('\njson error\n')
@@ -44,11 +44,10 @@ def start_prediction(json_string, user_id):
             clean_photo = json_obj['fields']
             clean_photo['id'] = json_obj['pk']
             clean_array.append(clean_photo)
+            tag = clean_photo["tag"]
         json_input = json.dumps(clean_array)
 
         print(json_input)
-
-        tag = clean_photo["tag"]
 
         bool_result = Prediction(json_input, str(user_id), str(tag))
 

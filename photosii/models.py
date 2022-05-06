@@ -12,7 +12,7 @@ from django.core.files.base import ContentFile
 from django.forms.models import model_to_dict
 from django.core.serializers.json import DjangoJSONEncoder
 
-from PIL import Image
+from PIL import Image, ImageOps
 
 from rq import Queue
 from redis import Redis
@@ -49,6 +49,7 @@ class Photo(models.Model):
     full_image = models.ImageField(upload_to=gen_image_filename_full, null=True, blank=True)
     tag = models.ForeignKey('Tag', on_delete=models.CASCADE, related_name='photos', db_index=True, null=True,
                             blank=True)
+    score = models.FloatField(null=True, blank=True)
     match = models.BooleanField(null=True, blank=True)
     device_path = models.CharField(max_length=500, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -66,6 +67,7 @@ class Photo(models.Model):
             image = Image.open(self.image.path)
             if image.width > 512 or image.height > 512:
                 image.thumbnail((512, 512))
+                image = ImageOps.exif_transpose(image)
                 image.save(self.image.path)
 
     def get_absolute_url(self):
@@ -104,7 +106,7 @@ class Tag(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f'{self.name} - {self.pk}'
+        return f'{self.name}'
 
     class Meta:
         ordering = ('name',)
@@ -114,7 +116,9 @@ class Tag(models.Model):
 def train(sender, instance, **kwargs):
     tag = instance.tag
     if tag.photos.filter(Q(is_ai_tag=False) and Q(match=True)).count() >= 20 and tag.photos.filter(
-            Q(is_ai_tag=False) and Q(match=False)).count() >= 20 and not instance.is_ai_tag:
+            Q(is_ai_tag=False) and Q(match=False)).count() >= 20 and not tag.is_trained:
+        tag.is_trained = True
+        tag.save()
         photos = tag.photos.filter(is_ai_tag=False)
         data = serializers.serialize('json', photos)
         email = tag.user.email
@@ -123,18 +127,11 @@ def train(sender, instance, **kwargs):
         queue = Queue(connection=redis_conn)
         job = queue.enqueue(start_train, data, email)
 
-        while not job.is_finished:
-            job.refresh()
-            time.sleep(1)
-        else:
-            tag.is_trained = True
-            tag.save()
-
 
 @receiver(models.signals.post_save, sender=Photo)
 def predict(sender, instance, **kwargs):
     tag = instance.tag
-    if tag.is_trained:
+    if tag.is_trained and instance.match is None:
         photo_query = tag.photos.filter(match=None)
         if photo_query.count() > 0:
             data = serializers.serialize('json', photo_query)

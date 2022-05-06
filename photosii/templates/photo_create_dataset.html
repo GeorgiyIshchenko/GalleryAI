@@ -13,7 +13,7 @@
 <div class="container" style="padding:30px 0;">
     <div class="pricing-header p-3 pb-md-4 mx-auto text-center">
         <h1 class="display-4 fw-normal">Обучение в проекте</h1>
-        <p class="fs-5 text-muted">Выберите тэг и загрузите фотографии, которые вам подходят и не подходят (не менее 20
+        <p class="fs-5 text-muted">Выберите проект и загрузите фотографии, которые вам подходят и не подходят (не менее 20
             для каждого статуса) для
             сортировки по этому проекту. Чтобы предсказания нейросети в дальнейшем имели высокую точность, постарайтесь
             выбирать разные по цвету, качеству и композиции изображения.</p>
@@ -22,7 +22,7 @@
         <div class="card-body">
             <form action="{% url 'photosii:photo_create_dataset' %}" method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
-                <div class="form-group" style="width:250px;"><label for="id_tag">Выберите тэг для
+                <div class="form-group" style="width:250px;"><label for="id_tag">Выберите проект для
                     обучения</label><select
                         name="tag" class="form-control" title=""
                         id="id_tag">

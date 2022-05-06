@@ -9,6 +9,7 @@ app_name = PhotosiiConfig.name
 urlpatterns = [
     path('account/', include('account.urls')),
     path('', homepage, name='homepage'),
+    path('project_add', project_add, name='project_add'),
     path('create_dataset', photo_create_dataset, name='photo_create_dataset'),
     path('load', photo_load, name='photo_load'),
     path('<int:id>/delete', photo_delete, name='photo_delete'),

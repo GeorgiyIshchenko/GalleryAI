@@ -13,13 +13,13 @@
 <div class="container" style="padding:30px 0;">
     <div class="pricing-header p-3 pb-md-4 mx-auto text-center">
         <h1 class="display-4 fw-normal">Предсказание фото</h1>
-        <p class="fs-5 text-muted">Выберите проект и загрузите фотографии для сортировки по тэгам.</p>
+        <p class="fs-5 text-muted">Выберите проект и загрузите фотографии для сортировки по проектам.</p>
     </div>
     <div class="card w-50 m-auto">
         <div class="card-body">
             <form action="{% url 'photosii:photo_load' %}" method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
-                <div class="form-group" style="width:250px;"><label for="id_tag">Выберите тэг для
+                <div class="form-group" style="width:250px;"><label for="id_tag">Выберите проект для
                     обучения</label><select
                         name="tag" class="form-control" title=""
                         id="id_tag">

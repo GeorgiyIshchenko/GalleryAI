@@ -33,6 +33,7 @@ ALLOWED_HOSTS = ['*']
 
 SITE_ID = 3
 
+# rqworker -w rq_win.WindowsWorker
 
 INSTALLED_APPS = [
     'django.contrib.admin',

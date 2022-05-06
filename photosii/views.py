@@ -17,24 +17,45 @@ import json
 def homepage(request):
     if request.user.is_authenticated:
         user = request.user
-        if request.method == 'POST':
-            tag_name = request.POST.get('tag_name')
-            new_tag = Tag.objects.create(user=user, name=tag_name)
-            new_tag.save()
         if user.tags.count():
             tags = user.tags.all().order_by('created_at')
             print(tags)
             if request.GET.get('tag'):
                 tag = tags.get(pk=int(request.GET.get('tag')))
+                request.session['tag_id'] = tag.id
             else:
-                tag = tags[0]
-            match = tag.photos.filter(match=True)
-            not_match = tag.photos.filter(match=False)
-            data = {f"Match ({match.count()})": {"color": "#30d5c8", "photos": match},
-                    f"Don't match ({not_match.count()})": {"color": "#a04de5", "photos": not_match}}
-            return render(request, 'homepage.html', {'data': data, 'dropdown': True, 'tags': tags, 'current_tag': tag})
+                if request.session['tag_id']:
+                    tag = Tag.objects.get(id=request.session['tag_id'])
+                else:
+                    tag = tags[0]
+            match = tag.photos.filter(Q(match=True) & Q(is_ai_tag=True))
+            not_match = tag.photos.filter(Q(match=False) & Q(is_ai_tag=True))
+            trained_match = tag.photos.filter(Q(match=True) & Q(is_ai_tag=False))
+            trained_not_match = tag.photos.filter(Q(match=False) & Q(is_ai_tag=False))
+            random_photo = None
+            if trained_match.count():
+                random_photo = trained_match.order_by('?')[0]
+            data = {f"Match ({match.count()})": {"color": "dark", "text": "light", "photos": match},
+                    f"Don't match ({not_match.count()})": {"color": "light", "text": "dark", "photos": not_match}, }
+            data_trained = {
+                f"Match ({trained_match.count()})": {"color": "light", "text": "dark", "photos": trained_match},
+                f"Don't match ({trained_not_match.count()})": {"color": "dark", "text": "light",
+                                                               "photos": trained_not_match}, }
+            return render(request, 'homepage.html',
+                          {'data': data, 'data_trained': data_trained, 'dropdown': True, 'tags': tags,
+                           'current_tag': tag, 'random_photo': random_photo})
         return render(request, 'homepage.html', {'dropdown': True, 'add_tag': True})
     return render(request, 'homepage.html')
+
+
+def project_add(request):
+    if request.method == 'POST':
+        user = request.user
+        tag_name = request.POST.get('tag_name')
+        new_tag = Tag.objects.create(user=user, name=tag_name)
+        new_tag.save()
+        return redirect('/')
+    return render(request, 'project_add.html')
 
 
 def photo_view(request, id):
@@ -52,7 +73,7 @@ def photo_delete(request, id):
 
 
 def photo_load(request):
-    if request.method=="POST":
+    if request.method == "POST":
         tag = Tag.objects.get(pk=int(request.POST.get('tag')))
         photos = request.FILES.getlist('photos')
         for i in photos:

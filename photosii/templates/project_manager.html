@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% load bootstrap4 %}
+
+{% block title %}
+{{ photo.tag.name|title }}
+{% endblock %}
+
+{% block body %}
+
+{% include "navbar.html" %}
+
+<div class="d-md-flex flex-md-equal w-100 pt-5" style="position: absolute; height: 100%; clear: both">
+    <div class="bg-dark pt-md-5 px-md-5 pt-3 overflow-hidden w-100 h-100">
+        <div class="my-3 py-3 text-center text-white" style="height: 170px;">
+            <h2 class="display-5">Менеджер проектов</h2>
+        </div>
+        <div class="bg-light py-3 shadow-sm mx-auto"
+             style="width: 70%; height: 100%; border-radius: 42px 42px 0 0;">
+            <div class="card mt-3 mx-auto" style="width:80%;">
+                <div class="card-body">
+                    <form class="d-flex mx-2" method="POST" action="{% url 'photosii:project_add' %}">
+                        {% csrf_token %}
+                        <input name="tag_name" class="form-control me-2" type="search"
+                               placeholder="Добавить проект"
+                               aria-label="Search">
+                        <button class="btn btn-success" type="submit">+</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-3 h-100 mx-auto" style="width:80%;">
+                <div class="card-body">
+                    {% for project in projects %}
+                    <form class="d-flex mx-2 mb-3" method="POST" action="{{ project.get_absolute_url_edit }}">
+                        {% csrf_token %}
+                        <input name="project_name" class="form-control me-2" type="search"
+                               placeholder="Переименовать" value="{{ project }}"
+                               aria-label="Search">
+                        <div class="btn-group shadow-sm" role="group" aria-label="Basic mixed styles example">
+                            <button type="submit" class="btn btn-light">Переименовать</button>
+                            <a href="{% url 'photosii:photo_create_dataset' %}?project_id={{ project.id }}" type="button" class="btn btn-success">Обучить</a>
+                            <a href="{% url 'photosii:photo_load' %}?project_id={{ project.id }}" type="button" class="btn btn-secondary">Предсказать</a>
+                            <a href="{{ project.get_absolute_url_delete }}" type="button" class="btn btn-danger">Удалить</a>
+                        </div>
+                    </form>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

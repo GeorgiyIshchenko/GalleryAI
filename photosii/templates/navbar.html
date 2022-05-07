@@ -1,9 +1,9 @@
 {% load i18n %}
-<header class="site-header sticky-top py-1 text-light bg-dark">
+<header class="site-header sticky-top py-1 text-light bg-dark" style="position: absolute; width: 100%;">
     <nav class="collapse navbar-collapse container d-flex flex-column flex-md-row justify-content-between px-5">
         <a class="text-light py-2 d-none d-md-inline-block nav-link" href="{% url 'photosii:homepage' %}">{% trans "Галерея" %}</a>
         {% if user.is_authenticated %}
-        <a class="text-light py-2 d-none d-md-inline-block nav-link" href="{% url 'photosii:project_add' %}">{% trans "Создать проект" %}</a>
+        <a class="text-light py-2 d-none d-md-inline-block nav-link" href="{% url 'photosii:project_add' %}">{% trans "Проекты" %}</a>
         <a class="text-light py-2 d-none d-md-inline-block nav-link" href="{% url 'photosii:photo_create_dataset' %}">{% trans "Обучить" %}</a>
         <a class="text-light py-2 d-none d-md-inline-block nav-link" href="{% url 'photosii:photo_load' %}">{% trans "Предсказать" %}</a>
         <a class="text-light py-2 d-none d-md-inline-block nav-link" href="#">{{ request.user.email }}</a>

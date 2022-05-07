@@ -59,7 +59,13 @@ class TagListSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'is_trained')
 
 
-class FileSerializer(serializers.ModelSerializer):
+class DatasetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Photo
         fields = ('image', 'match', 'is_ai_tag', 'tag', 'device_path')
+
+
+class PredictionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Photo
+        fields = ('image', 'is_ai_tag', 'tag', 'device_path')

@@ -114,17 +114,19 @@ class Tag(models.Model):
             random_photo = trained_match.order_by('?')[0]
             return random_photo
 
+    def get_absolute_url_edit(self):
+        return reverse('photosii:project_edit', kwargs={'pk': self.id})
+
+    def get_absolute_url_delete(self):
+        return reverse('photosii:project_delete', kwargs={'pk': self.id})
+
     class Meta:
         ordering = ('name',)
 
 
-@receiver(models.signals.post_save, sender=Photo)
-def train(sender, instance, **kwargs):
-    tag = instance.tag
+def train(tag):
     if tag.photos.filter(Q(is_ai_tag=False) and Q(match=True)).count() >= 20 and tag.photos.filter(
-            Q(is_ai_tag=False) and Q(match=False)).count() >= 20 and not tag.is_trained:
-        tag.is_trained = True
-        tag.save()
+            Q(is_ai_tag=False) and Q(match=False)).count() >= 20:
         photos = tag.photos.filter(is_ai_tag=False)
         data = serializers.serialize('json', photos)
         email = tag.user.email
@@ -132,12 +134,12 @@ def train(sender, instance, **kwargs):
         redis_conn = Redis()
         queue = Queue(connection=redis_conn)
         job = queue.enqueue(start_train, data, email)
+        tag.is_trained = True
+        tag.save()
 
 
-@receiver(models.signals.post_save, sender=Photo)
-def predict(sender, instance, **kwargs):
-    tag = instance.tag
-    if tag.is_trained and instance.match is None:
+def predict(tag):
+    if tag.is_trained:
         photo_query = tag.photos.filter(match=None)
         if photo_query.count() > 0:
             data = serializers.serialize('json', photo_query)

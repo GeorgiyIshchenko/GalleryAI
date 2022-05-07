@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FileUploadParser
 from rest_framework import status
 from django.http import JsonResponse
+from django.db import IntegrityError
 
 from .models import *
 from .forms import *
@@ -35,11 +36,11 @@ def homepage(request):
             random_photo = None
             if trained_match.count():
                 random_photo = trained_match.order_by('?')[0]
-            data = {f"Match ({match.count()})": {"color": "dark", "text": "light", "photos": match},
-                    f"Don't match ({not_match.count()})": {"color": "light", "text": "dark", "photos": not_match}, }
+            data = {f"Match ({match.count()})": {"color": "white", "text": "dark", "photos": match},
+                    f"Don't match ({not_match.count()})": {"color": "dark", "text": "white", "photos": not_match}, }
             data_trained = {
-                f"Match ({trained_match.count()})": {"color": "light", "text": "dark", "photos": trained_match},
-                f"Don't match ({trained_not_match.count()})": {"color": "dark", "text": "light",
+                f"Match ({trained_match.count()})": {"color": "white", "text": "dark", "photos": trained_match},
+                f"Don't match ({trained_not_match.count()})": {"color": "dark", "text": "white",
                                                                "photos": trained_not_match}, }
             return render(request, 'homepage.html',
                           {'data': data, 'data_trained': data_trained, 'dropdown': True, 'tags': tags,
@@ -48,14 +49,31 @@ def homepage(request):
     return render(request, 'homepage.html')
 
 
-def project_add(request):
+def project_manager(request):
+    projects = request.user.tags.all()
     if request.method == 'POST':
         user = request.user
         tag_name = request.POST.get('tag_name')
-        new_tag = Tag.objects.create(user=user, name=tag_name)
-        new_tag.save()
-        return redirect('/')
-    return render(request, 'project_add.html')
+        try:
+            new_project = Tag.objects.create(user=user, name=tag_name)
+            new_project.save()
+        except IntegrityError:
+            print('ПРОЕКТ С ТАКИМ ИМЕНЕМ УЖЕ СУЩЕСТВУЕТ')
+    return render(request, 'project_manager.html', {'projects': projects})
+
+
+def project_edit(request, pk):
+    if request.method == 'POST':
+        project = Tag.objects.get(pk=pk)
+        project.name = request.POST.get('project_name', project.name)
+        project.save()
+        return redirect(reverse('photosii:project_add'))
+
+
+def project_delete(request, pk):
+    project = Tag.objects.get(pk=pk)
+    project.delete()
+    return redirect(reverse('photosii:project_add'))
 
 
 def photo_view(request, id):
@@ -78,9 +96,16 @@ def photo_load(request):
         photos = request.FILES.getlist('photos')
         for i in photos:
             Photo.objects.create(image=i, tag=tag)
+        predict(tag)
         return redirect('/')
     tags = request.user.tags.filter(is_trained=True)
-    return render(request, 'photo_load.html', {'tags': tags})
+    current_project = tags[0]
+    if request.GET.get('project_id'):
+        try:
+            current_project = tags.get(id=request.GET['project_id'])
+        except Tag.DoesNotExist:
+            print('ТЭГ НЕ ОБУЧЕН')
+    return render(request, 'photo_load.html', {'tags': tags, 'current_project': current_project})
 
 
 def photo_create_dataset(request):
@@ -93,10 +118,14 @@ def photo_create_dataset(request):
             Photo.objects.create(image=i, match=True, tag=tag, is_ai_tag=False)
         for i in doesnt_match:
             Photo.objects.create(image=i, match=False, tag=tag, is_ai_tag=False)
+        train(tag)
         return redirect('/')
     tags = request.user.tags.all()
+    current_project = tags[0]
+    if request.GET.get('project_id'):
+        current_project = tags.get(id=request.GET['project_id'])
     form = DataSetCreationForm()
-    return render(request, 'photo_create_dataset.html', {'tags': tags, 'form': form})
+    return render(request, 'photo_create_dataset.html', {'tags': tags, 'form': form, 'current_project': current_project})
 
 
 class PhotoListView(APIView):
@@ -120,10 +149,22 @@ class PhotoView(APIView):
         return Response(serializer.data)
 
 
-class PhotoPost(APIView):
+class PhotoPostDataset(APIView):
 
     def post(self, request):
-        file_serializer = FileSerializer(data=request.data)
+        file_serializer = DatasetSerializer(data=request.data)
+        if file_serializer.is_valid():
+            file_serializer.save()
+            print(file_serializer)
+            return Response(file_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(file_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PhotoPostPrediction(APIView):
+
+    def post(self, request):
+        file_serializer = PredictionSerializer(data=request.data)
         if file_serializer.is_valid():
             file_serializer.save()
             print(file_serializer)

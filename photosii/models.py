@@ -108,6 +108,12 @@ class Tag(models.Model):
     def __str__(self):
         return f'{self.name}'
 
+    def get_random_photo(self):
+        trained_match = self.photos.filter(Q(match=True) & Q(is_ai_tag=False))
+        if trained_match.count():
+            random_photo = trained_match.order_by('?')[0]
+            return random_photo
+
     class Meta:
         ordering = ('name',)
 

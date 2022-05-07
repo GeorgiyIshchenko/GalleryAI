@@ -2,6 +2,8 @@
 
 {% block body %}
 
+{% load static %}
+
 {% include "navbar.html" %}
 {% if add_tag %}
 <div class="alert alert-danger my-5 text-center" role="alert">
@@ -12,15 +14,26 @@
 
 <style>
     .image_class {
-        background-image: url("{{random_photo.full_image.url}}");
         background-color: rgba(255, 255, 255, 0.6);
         background-blend-mode: lighten;
         background-size: cover;
     }
+
+    .image_class_dark {
+        background-size: cover;
+        background-color: rgba(255, 255, 255, 0.6);
+        background-blend-mode: lighten;
+    }
+
+    .image_class_dark img {
+        opacity: 0.5;
+    }
 </style>
 
-<div class=" image_class position-relative overflow-hidden p-3 p-md-5 text-center d-flex" id="content">
-    <div class="col-md-5 p-lg-5 mx-auto my-5">
+
+<div class=" image_class position-relative overflow-hidden p-3 p-md-5 text-center d-flex" id="content"
+     style="background-image: url('{{current_tag.get_random_photo.full_image.url}}');">
+    <div class="col-md-5 p-lg-5 mx-auto">
         <h1 class="display-4 fw-normal">{{ current_tag | title}}</h1>
         <form class="d-flex justify-content-center mt-3" action="{% url 'photosii:homepage' %}" method="GET"
               enctype="multipart/form-data">
@@ -49,47 +62,31 @@
     }
 
     .scale:hover {
-        transform: scale(1.2); /* Увеличиваем масштаб */
+        transform: scale(1.05); /* Увеличиваем масштаб */
     }
 </style>
 
-<div class="d-md-flex flex-md-equal w-100">
-    {% for tag, data in data.items %}
-    <div class="bg-{{data.color}} pt-md-5 px-md-5 text-center text-{{data.text}} overflow-hidden w-50">
-        <div class="mb-5 py-3">
-            <h2 class="display-5">{{ tag |title }}</h2>
-        </div>
-        <div class="bg-{{data.text}} box-shadow"
-             style="display: flex; flex-wrap: wrap; justify-content: left;width: 100%; min-height:320px; border-radius: 21px 21px 0px 0px; overflow:hidden">
-            {% for photo in data.photos.all %}
-            <div style="flex: 0 1 calc(100%/5);">
-                <a style="width: 100%;" href="{{ photo.get_absolute_url }}">
-                    <img class="scale" style="width: 100%; height: 160px; object-fit: cover" src="{{ photo.image.url }}"
-                         alt="{{ photo.get_absolute_url }}">
-                </a>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endfor %}
-</div>
+{% if request.user.is_authenticated %}
 
-<div class="image_class position-relative overflow-hidden p-3 text-center d-flex" id="content">
+<div class="image_class position-relative overflow-hidden p-3 text-center d-flex" id="content"
+     style="background-image: url('{{current_tag.get_random_photo.full_image.url}}');">
     <div class="mx-auto">
-        <h1 class="display-4 fw-normal">Trained on</h1>
+        <h1 class="display-5 text-muted fw-normal">Predicted</h1>
     </div>
     <div class="product-device shadow-sm d-none d-md-block"></div>
     <div class="product-device product-device-2 shadow-sm d-none d-md-block"></div>
 </div>
 
+{% endif %}
+
 <div class="d-md-flex flex-md-equal w-100">
-    {% for tag, data in data_trained.items %}
+    {% for tag, data in data.items %}
     <div class="bg-{{data.color}} pt-md-5 px-md-5 text-center text-{{data.text}} overflow-hidden w-50">
-        <div class="mb-5 py-3">
+        <div class="mb-5">
             <h2 class="display-5">{{ tag |title }}</h2>
         </div>
         <div class="bg-{{data.text}} box-shadow"
-             style="display: flex; flex-wrap: wrap; justify-content: left;width: 100%; min-height:320px; border-radius: 21px 21px 0px 0px; overflow:hidden">
+             style="display: flex; flex-wrap: wrap; justify-content: left;width: 100%; border-radius: 21px 21px 0px 0px; overflow:hidden">
             {% for photo in data.photos.all %}
             <div style="flex: 0 1 calc(100%/5);">
                 <a style="width: 100%;" href="{{ photo.get_absolute_url }}">
@@ -98,6 +95,62 @@
                 </a>
             </div>
             {% endfor %}
+            <a href="{% url 'photosii:photo_load' %}" style="flex: 0 1 calc(100%/5); text-decoration: none">
+                <div class="image_class_dark scale"
+                     style="height: 160px; padding-top: 35px ; background-image: url('{{current_tag.get_random_photo.full_image.url}}');">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" fill="dark"
+                         class="bi bi-plus-circle" viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"></path>
+                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"></path>
+                    </svg>
+                    <p class="fs-5 fw-bold text-dark nav-link" style="text-decoration: none">Предсказать</p>
+                </div>
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if request.user.is_authenticated %}
+
+<div class="image_class position-relative overflow-hidden p-3 text-center d-flex" id="content"
+     style="background-image: url('{{current_tag.get_random_photo.full_image.url}}');">
+    <div class="mx-auto">
+        <h1 class="display-5 text-muted fw-normal">Trained on</h1>
+    </div>
+    <div class="product-device shadow-sm d-none d-md-block"></div>
+    <div class="product-device product-device-2 shadow-sm d-none d-md-block"></div>
+</div>
+
+{% endif %}
+
+<div class="d-md-flex flex-md-equal w-100">
+    {% for tag, data in data_trained.items %}
+    <div class="bg-{{data.color}} pt-md-5 px-md-5 text-center text-{{data.text}} overflow-hidden w-50">
+        <div class="mb-5">
+            <h2 class="display-5">{{ tag |title }}</h2>
+        </div>
+        <div class="bg-{{data.text}} box-shadow"
+             style="display: flex; flex-wrap: wrap; justify-content: left;width: 100%; border-radius: 21px 21px 0px 0px; overflow:hidden">
+            {% for photo in data.photos.all %}
+            <div style="flex: 0 1 calc(100%/5);">
+                <a style="width: 100%;" href="{{ photo.get_absolute_url }}">
+                    <img class="scale" style="width: 100%; height: 160px; object-fit: cover" src="{{ photo.image.url }}"
+                         alt="{{ photo.get_absolute_url }}">
+                </a>
+            </div>
+            {% endfor %}
+            <a href="{% url 'photosii:photo_create_dataset' %}" style="flex: 0 1 calc(100%/5); text-decoration: none">
+                <div class="image_class_dark scale"
+                     style="height: 160px; padding-top: 35px; background-image: url('{{current_tag.get_random_photo.full_image.url}}');">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" fill="dark"
+                         class="bi bi-folder-plus" viewBox="0 0 16 16">
+                        <path d="m.5 3 .04.87a1.99 1.99 0 0 0-.342 1.311l.637 7A2 2 0 0 0 2.826 14H9v-1H2.826a1 1 0 0 1-.995-.91l-.637-7A1 1 0 0 1 2.19 4h11.62a1 1 0 0 1 .996 1.09L14.54 8h1.005l.256-2.819A2 2 0 0 0 13.81 3H9.828a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 6.172 1H2.5a2 2 0 0 0-2 2zm5.672-1a1 1 0 0 1 .707.293L7.586 3H2.19c-.24 0-.47.042-.683.12L1.5 2.98a1 1 0 0 1 1-.98h3.672z"></path>
+                        <path d="M13.5 10a.5.5 0 0 1 .5.5V12h1.5a.5.5 0 1 1 0 1H14v1.5a.5.5 0 1 1-1 0V13h-1.5a.5.5 0 0 1 0-1H13v-1.5a.5.5 0 0 1 .5-.5z"></path>
+                    </svg>
+                    <p class="fs-5 fw-bold text-dark nav-link" style="text-decoration: none">Обучить</p>
+                </div>
+            </a>
         </div>
     </div>
     {% endfor %}

@@ -24,9 +24,9 @@ def homepage(request):
                 tag = tags.get(pk=int(request.GET.get('tag')))
                 request.session['tag_id'] = tag.id
             else:
-                if request.session['tag_id']:
+                try:
                     tag = Tag.objects.get(id=request.session['tag_id'])
-                else:
+                except KeyError:
                     tag = tags[0]
             match = tag.photos.filter(Q(match=True) & Q(is_ai_tag=True))
             not_match = tag.photos.filter(Q(match=False) & Q(is_ai_tag=True))

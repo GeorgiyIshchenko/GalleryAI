@@ -1,3 +1,5 @@
+from abc import ABC
+
 from rest_framework import serializers
 
 from .models import Photo, CustomUser, Tag
@@ -41,7 +43,7 @@ class PhotoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Photo
-        fields = ('id', 'image', 'match', 'device_path', 'created_at', 'tag')
+        fields = ('id', 'image', 'score', 'full_image', 'match', 'device_path', 'created_at', 'is_ai_tag', 'tag')
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -59,7 +61,7 @@ class TagListSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'is_trained')
 
 
-class DatasetSerializer(serializers.ModelSerializer):
+class TrainSerializer(serializers.ModelSerializer):
     class Meta:
         model = Photo
         fields = ('image', 'match', 'is_ai_tag', 'tag', 'device_path')
@@ -68,4 +70,4 @@ class DatasetSerializer(serializers.ModelSerializer):
 class PredictionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Photo
-        fields = ('image', 'is_ai_tag', 'tag', 'device_path')
+        fields = ('image', 'tag', 'device_path')

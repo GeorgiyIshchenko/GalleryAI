@@ -23,7 +23,7 @@
                      <form action="{% url 'photosii:photo_load' %}" method="POST" enctype="multipart/form-data">
                             {% csrf_token %}
                             <div class="form-group" style="width:100%"><label class="fs-5" for="id_tag">Выберите проект для
-                                обучения</label><select
+                                предсказания</label><select
                                     name="tag" class="form-control form-select w-100" title=""
                                     id="id_tag">
                                 <option class="fs-5 text-muted" value="{{ current_project.id }}">{{ current_project.name | title}}</option>

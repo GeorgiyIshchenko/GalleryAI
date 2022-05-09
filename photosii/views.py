@@ -29,6 +29,8 @@ def homepage(request):
                     tag = Tag.objects.get(id=request.session['tag_id'])
                 except KeyError:
                     tag = tags[0]
+                except Tag.DoesNotExist:
+                    tag = tags[0]
             match = tag.photos.filter(Q(match=True) & Q(is_ai_tag=True))
             not_match = tag.photos.filter(Q(match=False) & Q(is_ai_tag=True))
             trained_match = tag.photos.filter(Q(match=True) & Q(is_ai_tag=False))
@@ -125,7 +127,8 @@ def photo_create_dataset(request):
     if request.GET.get('project_id'):
         current_project = tags.get(id=request.GET['project_id'])
     form = DataSetCreationForm()
-    return render(request, 'photo_create_dataset.html', {'tags': tags, 'form': form, 'current_project': current_project})
+    return render(request, 'photo_create_dataset.html',
+                  {'tags': tags, 'form': form, 'current_project': current_project})
 
 
 class PhotoListView(APIView):
@@ -149,13 +152,30 @@ class PhotoView(APIView):
         return Response(serializer.data)
 
 
-class PhotoPostDataset(APIView):
+class StartTrain(APIView):
+
+    def get(self, request, user_id, project_pk):
+        print('api_train')
+        project = Tag.objects.get(pk=project_pk)
+        result = train(project)
+        return Response({'success': result}, status=status.HTTP_201_CREATED)
+
+
+class StartPrediction(APIView):
+
+    def get(self, request, user_id, project_pk):
+        print('api_prediction')
+        project = Tag.objects.get(pk=project_pk)
+        result = predict(project)
+        return Response({'success': result}, status=status.HTTP_201_CREATED)
+
+
+class PhotoPostTrain(APIView):
 
     def post(self, request):
-        file_serializer = DatasetSerializer(data=request.data)
+        file_serializer = TrainSerializer(data=request.data)
         if file_serializer.is_valid():
             file_serializer.save()
-            print(file_serializer)
             return Response(file_serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(file_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -167,7 +187,6 @@ class PhotoPostPrediction(APIView):
         file_serializer = PredictionSerializer(data=request.data)
         if file_serializer.is_valid():
             file_serializer.save()
-            print(file_serializer)
             return Response(file_serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(file_serializer.errors, status=status.HTTP_400_BAD_REQUEST)

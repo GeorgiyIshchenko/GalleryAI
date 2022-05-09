@@ -49,7 +49,7 @@ class Photo(models.Model):
     full_image = models.ImageField(upload_to=gen_image_filename_full, null=True, blank=True)
     tag = models.ForeignKey('Tag', on_delete=models.CASCADE, related_name='photos', db_index=True, null=True,
                             blank=True)
-    score = models.FloatField(null=True, blank=True)
+    score = models.IntegerField(null=True, blank=True)
     match = models.BooleanField(null=True, blank=True)
     device_path = models.CharField(max_length=500, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -134,8 +134,15 @@ def train(tag):
         redis_conn = Redis()
         queue = Queue(connection=redis_conn)
         job = queue.enqueue(start_train, data, email)
+
+        while not job.is_finished:
+            job.refresh()
+            time.sleep(1)
+
         tag.is_trained = True
         tag.save()
+        return True
+    return False
 
 
 def predict(tag):
@@ -161,3 +168,5 @@ def predict(tag):
                 else:
                     photo.match = False
                 photo.save()
+        return True
+    return False

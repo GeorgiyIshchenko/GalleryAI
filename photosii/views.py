@@ -31,6 +31,7 @@ def homepage(request):
                     tag = tags[0]
                 except Tag.DoesNotExist:
                     tag = tags[0]
+            print(tag.get_path_dir_match())
             match = tag.photos.filter(Q(match=True) & Q(is_ai_tag=True))
             not_match = tag.photos.filter(Q(match=False) & Q(is_ai_tag=True))
             trained_match = tag.photos.filter(Q(match=True) & Q(is_ai_tag=False))

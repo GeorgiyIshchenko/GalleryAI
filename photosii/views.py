@@ -83,6 +83,8 @@ def photo_view(request, id):
     photo = get_object_or_404(Photo, id=id)
     if request.method == "POST":
         photo.match = (request.POST['match'] == "True")
+        photo.is_ai_tag = False
+        train(photo.tag)
         photo.save()
     return render(request, 'photo_view.html', {'photo': photo})
 

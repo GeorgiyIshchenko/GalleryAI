@@ -121,10 +121,12 @@ class Tag(models.Model):
         return reverse('photosii:project_delete', kwargs={'pk': self.id})
 
     def get_path_dir_match(self):
-        return '/'.join(self.photos.filter(match=True)[0].image.url.split('/')[0:-1])
+        if self.photos.filter(match=True).count():
+            return '/'.join(self.photos.filter(match=True)[0].image.url.split('/')[0:-1])
 
     def get_path_dir_not_match(self):
-        return '/'.join(self.photos.filter(match=False)[0].image.url.split('/')[0:-1])
+        if self.photos.filter(match=False).count():
+            return '/'.join(self.photos.filter(match=False)[0].image.url.split('/')[0:-1])
 
     class Meta:
         ordering = ('name',)

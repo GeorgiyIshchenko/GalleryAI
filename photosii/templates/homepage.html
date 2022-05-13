@@ -31,10 +31,10 @@
 </style>
 
 
-<div class=" image_class position-relative overflow-hidden mt-5 p-md-5 text-center d-flex" id="content"
+<div class=" image_class position-relative overflow-hidden mt-5 text-center d-flex" id="content"
      style="background-image: url('{{current_tag.get_random_photo.full_image.url}}');">
     <div class="col-md-5 p-lg-5 mx-auto">
-        <h1 class="display-1 fw-normal">{{ current_tag | title}}</h1>
+        <h1 class="display-1 fw-normal" style="font-size: 120px;">{{ current_tag | title}}</h1>
         <form class="d-flex justify-content-center mt-2" action="{% url 'photosii:homepage' %}" method="GET"
               enctype="multipart/form-data">
             <div class="form-group mx-2 d-flex justify-content-center" style="width:250px;"><select

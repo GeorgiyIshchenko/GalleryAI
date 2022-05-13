@@ -167,14 +167,12 @@ def predict(tag):
             while not job.is_finished:
                 job.refresh()
                 time.sleep(1)
-
-            for photo_id in job.result.keys():
-                photo = Photo.objects.get(id=photo_id)
+            print(job.result)
+            for photo_item in job.result:
+                photo = Photo.objects.get(id=photo_item["id"])
                 photo.is_ai_tag = True
-                if job.result[photo_id]:
-                    photo.match = True
-                else:
-                    photo.match = False
+                photo.match = photo_item["match"]
+                photo.score = photo_item["score"]
                 photo.save()
         return True
     return False

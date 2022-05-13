@@ -13,7 +13,7 @@ import rq
 # change it to correct paths
 
 path_to_media = "media/"  # with "/" at the end
-path_to_models = "ai/models/"  # with "/" at the end
+path_to_models = "/home/blawald/PycharmProjects/GalleryAI/models/"  # with "/" at the end
 
 
 def start_train(json_string, user_id):
@@ -49,7 +49,16 @@ def start_prediction(json_string, user_id):
 
         print(json_input)
 
-        bool_result = Prediction(json_input, str(user_id), str(tag))
+        result = Prediction(json_input, str(user_id), str(tag))
+
+        chance_list = [int(result[i] * 100) for i in range(len(result))]
+        bool_result = []
+        x= 0.5
+        for element in result:
+            if element>x:
+                bool_result.append(True)
+            else:
+                bool_result.append(False)
 
         output = json.loads(json_input)
 
@@ -57,13 +66,11 @@ def start_prediction(json_string, user_id):
             photo = Dict2Photo(obj)
             id_list.append(photo.id)
 
-        names_and_bool_result = dict()
-
-        names_and_bool_result = dict(zip(id_list, bool_result))
-
-        print(names_and_bool_result)
-
-        return names_and_bool_result
+        data = list()
+        for i in range(len(id_list)):
+            data.append({'id': id_list[i], 'score': chance_list[i], 'match': bool_result[i]})
+        print(data)
+        return data
 
     except json.decoder.JSONDecodeError:
         print('\njson error\n')
@@ -331,11 +338,4 @@ def Prediction(json_string, user_name, model_name):
     predictions = model.predict_on_batch(image_batch).flatten()
 
     predictions = tf.nn.sigmoid(predictions)
-    predictions = tf.where(predictions < 0.5, 0, 1)
-    result = []
-    for i in range(len(predictions)):
-        if predictions[i] == 1:
-            result.append(True)
-        else:
-            result.append(False)
-    return result
+    return predictions.numpy()

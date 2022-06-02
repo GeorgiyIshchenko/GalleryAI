@@ -43,7 +43,7 @@ class PhotoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Photo
-        fields = ('id', 'image', 'score', 'full_image', 'match', 'device_path', 'created_at', 'is_ai_tag', 'tag')
+        fields = ('id', 'image', 'score', 'full_image', 'match', 'device_path', 'device_uri', 'created_at', 'is_ai_tag', 'tag')
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -64,10 +64,10 @@ class TagListSerializer(serializers.ModelSerializer):
 class TrainSerializer(serializers.ModelSerializer):
     class Meta:
         model = Photo
-        fields = ('image', 'match', 'is_ai_tag', 'tag', 'device_path')
+        fields = ('image', 'match', 'is_ai_tag', 'tag', 'device_path', 'device_uri')
 
 
 class PredictionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Photo
-        fields = ('image', 'tag', 'device_path')
+        fields = ('image', 'tag', 'device_path', 'device_uri')

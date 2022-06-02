@@ -52,6 +52,7 @@ class Photo(models.Model):
     score = models.IntegerField(null=True, blank=True)
     match = models.BooleanField(null=True, blank=True)
     device_path = models.CharField(max_length=500, null=True, blank=True)
+    device_uri = models.CharField(max_length=500, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_ai_tag = models.BooleanField(default=False)
 

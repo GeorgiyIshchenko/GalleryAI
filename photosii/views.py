@@ -197,8 +197,9 @@ class PhotoPostPrediction(APIView):
 
 class PhotoDelete(APIView):
 
-    def delete(self, request, pk):
-        return Response(Photo.objects.get(pk=pk).delete())
+    def get(self, request, user_id, pk):
+        Photo.objects.get(pk=pk).delete()
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class TagsView(APIView):

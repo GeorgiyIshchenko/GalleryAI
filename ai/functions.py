@@ -13,7 +13,7 @@ import rq
 # change it to correct paths
 
 path_to_media = "media/"  # with "/" at the end
-path_to_models = "/home/blawald/PycharmProjects/GalleryAI/models/"  # with "/" at the end
+path_to_models = "ai/models/"  # with "/" at the end
 
 
 def start_train(json_string, user_id):

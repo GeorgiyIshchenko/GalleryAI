@@ -14,6 +14,9 @@ from .serializers import *
 
 import json
 
+def round12(a):
+    pass
+
 
 def homepage(request):
     if request.user.is_authenticated:
@@ -31,20 +34,54 @@ def homepage(request):
                     tag = tags[0]
                 except Tag.DoesNotExist:
                     tag = tags[0]
+
+            if request.method == 'POST':
+                if request.POST['type'] == 'prediction':
+                    if "Don't Match" in request.POST['tag']:
+                        for photo in tag.photos.all():
+                            if photo.is_ai_tag is True and photo.match is False:
+                                photo.delete()
+                    else:
+                        for photo in tag.photos.all():
+                            if photo.is_ai_tag is True and photo.match is True:
+                                photo.delete()
+                else:
+                    if "Don't Match" in request.POST['tag']:
+                        for photo in tag.photos.all():
+                            if photo.is_ai_tag is False and photo.match is False:
+                                photo.delete()
+                    else:
+                        for photo in tag.photos.all():
+                            if photo.is_ai_tag is False and photo.match is True:
+                                photo.delete()
+
             print(tag.get_path_dir_match())
             match = tag.photos.filter(Q(match=True) & Q(is_ai_tag=True))
+            cnt_m = match.count()
             not_match = tag.photos.filter(Q(match=False) & Q(is_ai_tag=True))
+            cnt_nm = not_match.count()
             trained_match = tag.photos.filter(Q(match=True) & Q(is_ai_tag=False))
+            cnt_tm = trained_match.count()
             trained_not_match = tag.photos.filter(Q(match=False) & Q(is_ai_tag=False))
+            cnt_tnm = trained_not_match.count()
+
+            width_m = int(cnt_m / (cnt_m + cnt_nm) * 100)
+            width_nm = 100 - width_m
+            width_tm = int(cnt_tm / (cnt_tm + cnt_tnm) * 100)
+            width_tnm = 100 - width_tm
+            print(width_m, width_nm, width_tm, width_tnm)
+
             random_photo = None
             if trained_match.count():
                 random_photo = trained_match.order_by('?')[0]
-            data = {f"Match ({match.count()})": {"color": "white", "text": "dark", "photos": match},
-                    f"Don't match ({not_match.count()})": {"color": "dark", "text": "white", "photos": not_match}, }
+            data = {f"Match ({match.count()})": {"color": "white", "text": "dark", "photos": match, "width": width_m},
+                    f"Don't match ({not_match.count()})": {"color": "dark", "text": "white", "photos": not_match,
+                                                           "width": width_nm}, }
             data_trained = {
-                f"Match ({trained_match.count()})": {"color": "white", "text": "dark", "photos": trained_match},
+                f"Match ({trained_match.count()})": {"color": "white", "text": "dark",
+                                                     "photos": trained_match, "width": width_tm},
                 f"Don't match ({trained_not_match.count()})": {"color": "dark", "text": "white",
-                                                               "photos": trained_not_match}, }
+                                                               "photos": trained_not_match, "width": width_tnm}, }
             return render(request, 'homepage.html',
                           {'data': data, 'data_trained': data_trained, 'dropdown': True, 'tags': tags,
                            'current_tag': tag, 'random_photo': random_photo})

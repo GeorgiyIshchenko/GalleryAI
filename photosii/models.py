@@ -34,12 +34,12 @@ class CustomUser(AbstractUser):
 
 
 def gen_image_filename(instance, filename):
-    return '{0}/{1}/{2}/{3}'.format(instance.tag.user.email, instance.tag.name,
+    return '{0}/{1}/{2}/{3}'.format(instance.tag.user.email, instance.tag.id,
                                     "match" if instance.match else "not_match", filename)
 
 
 def gen_image_filename_full(instance, filename):
-    return '{0}/{1}/{2}/{3}'.format(instance.tag.user.email, instance.tag.name,
+    return '{0}/{1}/{2}/{3}'.format(instance.tag.user.email, instance.tag.id,
                                     "match" if instance.match else "not_match", "full_" + filename)
 
 

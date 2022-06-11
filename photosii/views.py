@@ -65,9 +65,9 @@ def homepage(request):
             trained_not_match = tag.photos.filter(Q(match=False) & Q(is_ai_tag=False))
             cnt_tnm = trained_not_match.count()
 
-            width_m = int(cnt_m / (cnt_m + cnt_nm) * 100)
+            width_m = int(cnt_m / (cnt_m + cnt_nm if cnt_m + cnt_nm != 0 else 100) * 100)
             width_nm = 100 - width_m
-            width_tm = int(cnt_tm / (cnt_tm + cnt_tnm) * 100)
+            width_tm = int(cnt_tm / (cnt_tm + cnt_tnm if cnt_m + cnt_nm != 0 else 100) * 100)
             width_tnm = 100 - width_tm
             print(width_m, width_nm, width_tm, width_tnm)
 

@@ -26,7 +26,6 @@ def homepage(request):
             print(tags)
             if request.GET.get('tag'):
                 tag = tags.get(pk=int(request.GET.get('tag')))
-                request.session['tag_id'] = tag.id
             else:
                 try:
                     tag = Tag.objects.get(id=request.session['tag_id'])

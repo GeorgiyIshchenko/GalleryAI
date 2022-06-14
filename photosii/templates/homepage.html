@@ -95,7 +95,7 @@
                 <h2 class="display-5">{{ tag |title }}
                     <input name="type" hidden="true" value="prediction"/>
                     <input name="tag" hidden="true" value="{{ tag|title }}"/>
-                    <button class="btn btn-dark" type="submit">
+                    <button class="btn btn-{{data.color}}" type="submit">
                         <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="currentColor"
                              class="bi bi-trash"
                              viewBox="0 0 16 16">
@@ -168,7 +168,7 @@
                 <h2 class="display-5">{{ tag |title }}
                     <input name="type" hidden="true" value="trained"/>
                     <input name="tag" hidden="true" value="{{ tag|title }}"/>
-                    <button class="btn btn-dark" type="submit">
+                    <button class="btn btn-{{data.color}}" type="submit">
                         <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="currentColor"
                              class="bi bi-trash"
                              viewBox="0 0 16 16">

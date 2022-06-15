@@ -86,6 +86,7 @@ class Photo(models.Model):
 
 def _delete_file(path):
     if os.path.isfile(path):
+        os.close(os.open(path, os.O_RDWR|os.O_CREAT ))
         os.remove(path)
 
 

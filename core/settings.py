@@ -31,6 +31,7 @@ ALLOWED_HOSTS = ['*']
 
 SITE_ID = 3
 
+# 172.18.219.67
 # rqworker -w rq_win.WindowsWorker
 
 INSTALLED_APPS = [
@@ -44,7 +45,8 @@ INSTALLED_APPS = [
     'bootstrap4',
     'account',
     'rest_framework',
-    'photosii',
+    'web',
+    'api',
     'ai',
 ]
 
@@ -97,7 +99,7 @@ TEMPLATE_CONTEXT_PROCESSORS = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-AUTH_USER_MODEL = 'photosii.CustomUser'
+AUTH_USER_MODEL = 'web.CustomUser'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -138,12 +140,12 @@ LOGOUT_REDIRECT_URL = '/'
 
 ACCOUNT_EMAIL_UNIQUE = True
 ACCOUNT_EMAIL_CONFIRMATION_REQUIRED = True
-ACCOUNT_LOGIN_URL = 'photosii:account_login'
+ACCOUNT_LOGIN_URL = 'web:account_login'
 ACCOUNT_EMAIL_CONFIRMATION_ANONYMOUS_REDIRECT_URL = ACCOUNT_LOGIN_URL
 ACCOUNT_PASSWORD_RESET_REDIRECT_URL = ACCOUNT_LOGIN_URL
-ACCOUNT_EMAIL_CONFIRMATION_URL = "photosii:account_confirm_email"
-ACCOUNT_SETTINGS_REDIRECT_URL = 'photosii:account_settings'
-ACCOUNT_PASSWORD_CHANGE_REDIRECT_URL = "photosii:account_password"
+ACCOUNT_EMAIL_CONFIRMATION_URL = "web:account_confirm_email"
+ACCOUNT_SETTINGS_REDIRECT_URL = 'web:account_settings'
+ACCOUNT_PASSWORD_CHANGE_REDIRECT_URL = "web:account_password"
 ACCOUNT_LOGIN = '/'
 ACCOUNT_THEME_CONTACT_EMAIL = ""
 

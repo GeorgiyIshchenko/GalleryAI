@@ -1,14 +1,6 @@
-from abc import ABC
-
 from rest_framework import serializers
 
 from web.models import Photo, CustomUser, Tag
-
-
-class UsersSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CustomUser
-        fields = ('id', 'email')
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -17,18 +9,8 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'email', 'username')
 
 
-class UserAuthSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(max_length=50)
-
-
-class PhotoListSerializer(serializers.ModelSerializer):
-    tag = serializers.SlugRelatedField(slug_field='name', read_only=True)
-    image = serializers.ImageField(read_only=True)
-
-    class Meta:
-        model = Photo
-        fields = '__all__'
+class TokenSerializer(serializers.Serializer):
+    token = serializers.CharField(max_length=50)
 
 
 class PhotoJobSerializer(serializers.ModelSerializer):
@@ -43,7 +25,8 @@ class PhotoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Photo
-        fields = ('id', 'image', 'score', 'full_image', 'match', 'device_path', 'device_uri', 'created_at', 'is_ai_tag', 'tag')
+        fields = ('id', 'image', 'score', 'full_image', 'match', 'device_path', 'device_uri', 'created_at', 'is_ai_tag',
+                  'tag')
 
 
 class TagSerializer(serializers.ModelSerializer):

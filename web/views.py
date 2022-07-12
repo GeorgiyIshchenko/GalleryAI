@@ -6,10 +6,6 @@ from django.db import IntegrityError
 from .forms import *
 
 
-def round12(a):
-    pass
-
-
 @login_required
 def homepage(request):
     if request.user.is_authenticated:
@@ -49,19 +45,9 @@ def homepage(request):
 
             print(tag.get_path_dir_match())
             match = tag.photos.filter(Q(match=True) & Q(is_ai_tag=True))
-            cnt_m = match.count()
             not_match = tag.photos.filter(Q(match=False) & Q(is_ai_tag=True))
-            cnt_nm = not_match.count()
             trained_match = tag.photos.filter(Q(match=True) & Q(is_ai_tag=False))
-            cnt_tm = trained_match.count()
             trained_not_match = tag.photos.filter(Q(match=False) & Q(is_ai_tag=False))
-            cnt_tnm = trained_not_match.count()
-
-            # width_m = int(cnt_m / (cnt_m + cnt_nm if cnt_m + cnt_nm != 0 else 100) * 100)
-            # width_nm = 100 - width_m
-            # width_tm = int(cnt_tm / (cnt_tm + cnt_tnm if cnt_m + cnt_nm != 0 else 100) * 100)
-            # width_tnm = 100 - width_tm
-            # print(width_m, width_nm, width_tm, width_tnm)
 
             random_photo = None
             if trained_match.count():

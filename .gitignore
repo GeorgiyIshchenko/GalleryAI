@@ -2,3 +2,5 @@ venv
 _pychace_
 .idea
 .sqlite3
+media
+ai/models

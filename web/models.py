@@ -2,6 +2,8 @@ import time
 
 from django.db import models
 from django.db.models import Q
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.shortcuts import reverse
 from django.contrib.auth.models import AbstractUser
 from django.core.files.base import ContentFile
@@ -15,6 +17,8 @@ from django.core import serializers
 
 from ai.functions import start_train, start_prediction
 
+from rest_framework.authtoken.models import Token
+
 
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
@@ -25,6 +29,13 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.email
+
+
+@receiver(post_save, sender=CustomUser)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    print('пост сейв ресивер')
+    if created:
+        Token.objects.create(user=instance)
 
 
 def gen_image_filename(instance, filename):

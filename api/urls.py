@@ -1,4 +1,5 @@
 from django.urls import path, include
+from rest_framework.authtoken import views
 
 from .views import *
 from .apps import ApiConfig
@@ -6,16 +7,14 @@ from .apps import ApiConfig
 app_name = ApiConfig.name
 
 urlpatterns = [
-    path('<int:user_id>/photos/', PhotoListView.as_view()),
-    path('<int:user_id>/photos/<int:pk>/', PhotoView.as_view()),
-    path('<int:user_id>/photos/<int:pk>/delete/', PhotoDelete.as_view()),
-    path('photos/post/train', PhotoPostTrain.as_view()),
-    path('photos/post/prediction', PhotoPostPrediction.as_view()),
-    path('<int:user_id>/tags/', TagsView.as_view()),
-    path('<int:user_id>/tags/<int:tag_pk>/', TagView.as_view()),
-    path('<int:user_id>/tags/<int:project_pk>/train/', StartTrain.as_view()),
-    path('<int:user_id>/tags/<int:project_pk>/prediction/', StartPrediction.as_view()),
-    path('users/', UsersView.as_view()),
-    path('<int:user_id>/users/', UserView.as_view()),
-    path('users/auth/', UserAuth.as_view()),
+    path('token-auth/', views.obtain_auth_token),
+    path('photos/<int:pk>/', PhotoView.as_view()),
+    path('photos/<int:pk>/delete/', PhotoDelete.as_view()),
+    path('post_photo_train/', PhotoPostTrain.as_view()),
+    path('post_photo_prediction/', PhotoPostPrediction.as_view()),
+    path('projects/', TagsView.as_view()),
+    path('projects/<int:tag_pk>/', TagView.as_view()),
+    path('start_train_project/<int:project_pk>', StartTrain.as_view()),
+    path('start_prediction_project/<int:project_pk>', StartPrediction.as_view()),
+    path('get_user/', UserView.as_view()),
 ]

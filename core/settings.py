@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'bootstrap4',
     'account',
     'rest_framework',
+    'rest_framework.authtoken',
     'web',
     'api',
     'ai',
@@ -55,6 +56,10 @@ REST_FRAMEWORK = {
     # or allow read-only access for unauthenticated users.
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ],
     'DATETIME_FORMAT': "%d.%m.%Y %H:%M",
 }
